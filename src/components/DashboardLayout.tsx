@@ -1,0 +1,183 @@
+import React, { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  Menu, X, BookOpen, LogOut, 
+  LayoutDashboard, StickyNote, User, 
+  GraduationCap, Library, FlaskConical, 
+  Users, Award, Scale
+} from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
+import { supabase } from '../lib/supabase';
+import LanguageSwitcher from './LanguageSwitcher';
+
+interface SidebarItemProps {
+  to: string;
+  icon: React.ElementType;
+  label: string;
+  active: boolean;
+  onClick?: () => void;
+}
+
+const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon: Icon, label, active, onClick }) => (
+  <Link
+    to={to}
+    onClick={onClick}
+    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+      active 
+        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
+        : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600'
+    }`}
+  >
+    <Icon className="w-5 h-5 flex-shrink-0" />
+    <span className="font-medium text-sm truncate">{label}</span>
+  </Link>
+);
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { t } = useLanguage();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
+
+  const menuItems = [
+    { to: '/dashboard/pedagog', icon: LayoutDashboard, label: t('dashboard') },
+    { to: '/dashboard/pedagog/notes', icon: StickyNote, label: t('personalNotes') },
+    { to: '/dashboard/pedagog/academic', icon: GraduationCap, label: t('academicWork') },
+    { to: '/dashboard/pedagog/methodical', icon: Library, label: t('methodicalWork') },
+    { to: '/dashboard/pedagog/scientific', icon: FlaskConical, label: t('scientificWork') },
+    { to: '/dashboard/pedagog/master-apprentice', icon: Users, label: t('masterApprentice') },
+    { to: '/dashboard/pedagog/annual', icon: Award, label: t('annualWork') },
+    { to: '/dashboard/pedagog/norms', icon: Scale, label: t('norms') },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar - Desktop */}
+      <aside className="hidden lg:flex flex-col w-72 bg-white border-r border-gray-100 p-6 fixed h-full overflow-y-auto z-50">
+        <Link to="/" className="flex items-center gap-2 mb-10 px-2">
+          <div className="p-2 bg-indigo-600 rounded-lg">
+            <BookOpen className="w-6 h-6 text-white" />
+          </div>
+          <span className="text-xl font-bold text-gray-900">E-Pedagog</span>
+        </Link>
+
+        <nav className="flex-1 space-y-1">
+          {menuItems.map((item) => (
+            <SidebarItem 
+              key={item.to}
+              to={item.to}
+              icon={item.icon}
+              label={item.label}
+              active={location.pathname === item.to}
+            />
+          ))}
+        </nav>
+
+        <div className="pt-6 mt-6 border-t border-gray-100">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 w-full px-4 py-3 text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200"
+          >
+            <LogOut className="w-5 h-5" />
+            <span className="font-medium">{t('logout')}</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Sidebar - Mobile Overlay */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSidebarOpen(false)}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+            />
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 left-0 w-72 bg-white z-50 p-6 shadow-2xl lg:hidden overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-10">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-indigo-600 rounded-lg">
+                    <BookOpen className="w-6 h-6 text-white" />
+                  </div>
+                  <span className="text-xl font-bold text-gray-900">E-Pedagog</span>
+                </div>
+                <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-gray-400 hover:text-gray-600">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <nav className="space-y-1">
+                {menuItems.map((item) => (
+                  <SidebarItem 
+                    key={item.to}
+                    to={item.to}
+                    icon={item.icon}
+                    label={item.label}
+                    active={location.pathname === item.to}
+                    onClick={() => setIsSidebarOpen(false)}
+                  />
+                ))}
+              </nav>
+
+              <div className="pt-6 mt-6 border-t border-gray-100">
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 w-full px-4 py-3 text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="font-medium">{t('logout')}</span>
+                </button>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col lg:pl-72 min-w-0 relative">
+        {/* Header */}
+        <header className="h-16 bg-white border-b border-gray-100 px-4 lg:px-8 flex items-center justify-between sticky top-0 z-30">
+          <button 
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg lg:hidden"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+
+          <div className="flex-1 lg:flex-none" />
+
+          <div className="flex items-center gap-4">
+            <LanguageSwitcher />
+
+            <div className="h-8 w-px bg-gray-100" />
+
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                <User className="w-4 h-4 text-indigo-600" />
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Content */}
+        <main className="p-4 lg:p-8 flex-1 overflow-x-hidden outline-none">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
