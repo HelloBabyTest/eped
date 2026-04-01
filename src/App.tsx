@@ -11,6 +11,7 @@ import AcademicWork from './pages/AcademicWork';
 import MethodicalWork from './pages/MethodicalWork';
 import ScientificWork from './pages/ScientificWork';
 import MentorWork from './pages/MentorWork';
+import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import { isSupabaseConfigured } from './lib/supabase';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
@@ -85,6 +86,7 @@ export default function App() {
 
               {/* Protected Dashboard Routes */}
               <Route path="/dashboard/pedagog" element={<DashboardLayout><PedagogDashboard /></DashboardLayout>} />
+              <Route path="/dashboard/pedagog/profile" element={<DashboardLayout><Profile /></DashboardLayout>} />
               <Route path="/dashboard/pedagog/notes" element={<DashboardLayout><PersonalNotes /></DashboardLayout>} />
               <Route path="/dashboard/pedagog/academic" element={<DashboardLayout><AcademicWork /></DashboardLayout>} />
               <Route path="/dashboard/pedagog/methodical" element={<DashboardLayout><MethodicalWork /></DashboardLayout>} />

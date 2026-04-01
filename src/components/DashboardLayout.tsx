@@ -40,10 +40,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
+  const [role, setRole] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    fetchRole();
+  }, []);
+
+  const fetchRole = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (data) setRole(data.role);
+    }
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/login');
+  };
+
+  const getDashboardLink = () => {
+    if (role === 'pedagog') return '/dashboard/pedagog';
+    if (role === 'rahbariyat') return '/dashboard/rahbariyat';
+    if (role === 'admin') return '/dashboard/admin';
+    return '/';
   };
 
   const menuItems = [
@@ -61,7 +85,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex transition-colors duration-200">
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:flex flex-col w-72 bg-white dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700 p-6 fixed h-full overflow-y-auto z-50 transition-colors duration-200">
-        <Link to="/" className="flex items-center gap-2 mb-10 px-2">
+        <Link to={getDashboardLink()} className="flex items-center gap-2 mb-10 px-2">
           <div className="p-2 bg-indigo-600 rounded-lg">
             <BookOpen className="w-6 h-6 text-white" />
           </div>
@@ -110,12 +134,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               className="fixed inset-y-0 left-0 w-72 bg-white dark:bg-gray-800 z-50 p-6 shadow-2xl lg:hidden overflow-y-auto transition-colors duration-200"
             >
               <div className="flex items-center justify-between mb-10">
-                <div className="flex items-center gap-2">
+                <Link to={getDashboardLink()} onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-2">
                   <div className="p-2 bg-indigo-600 rounded-lg">
                     <BookOpen className="w-6 h-6 text-white" />
                   </div>
                   <span className="text-xl font-bold text-gray-900 dark:text-white">E-Pedagog</span>
-                </div>
+                </Link>
                 <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                   <X className="w-6 h-6" />
                 </button>
@@ -167,11 +191,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             <div className="h-8 w-px bg-gray-100 dark:bg-gray-700" />
 
-            <div className="flex items-center gap-3">
+            <Link 
+              to="/dashboard/pedagog/profile"
+              className="flex items-center gap-3 p-1 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
               <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/50 rounded-full flex items-center justify-center">
                 <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
               </div>
-            </div>
+            </Link>
           </div>
         </header>
 
