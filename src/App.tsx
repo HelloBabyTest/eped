@@ -12,6 +12,8 @@ import MethodicalWork from './pages/MethodicalWork';
 import ScientificWork from './pages/ScientificWork';
 import MentorWork from './pages/MentorWork';
 import Profile from './pages/Profile';
+import AnnualReport from './pages/AnnualReport';
+import Norms from './pages/Norms';
 import AdminDashboard from './pages/AdminDashboard';
 import { isSupabaseConfigured } from './lib/supabase';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
@@ -92,8 +94,8 @@ export default function App() {
               <Route path="/dashboard/pedagog/methodical" element={<DashboardLayout><MethodicalWork /></DashboardLayout>} />
               <Route path="/dashboard/pedagog/scientific" element={<DashboardLayout><ScientificWork /></DashboardLayout>} />
               <Route path="/dashboard/pedagog/master-apprentice" element={<DashboardLayout><MentorWork /></DashboardLayout>} />
-              <Route path="/dashboard/pedagog/annual" element={<DashboardLayout><PlaceholderView title="YILLIK BAJARILGAN ISHLAR" /></DashboardLayout>} />
-              <Route path="/dashboard/pedagog/norms" element={<DashboardLayout><PlaceholderView title="ME’YORLAR" /></DashboardLayout>} />
+              <Route path="/dashboard/pedagog/annual" element={<DashboardLayout><AnnualReport /></DashboardLayout>} />
+              <Route path="/dashboard/pedagog/norms" element={<DashboardLayout><Norms /></DashboardLayout>} />
               
               <Route path="/dashboard/rahbariyat" element={<><Navbar /><RahbariyatDashboard /></>} />
               <Route path="/dashboard/admin" element={<><Navbar /><AdminDashboard /></>} />
