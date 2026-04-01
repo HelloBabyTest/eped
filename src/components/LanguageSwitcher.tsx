@@ -19,8 +19,9 @@ export default function LanguageSwitcher() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-all border border-transparent hover:border-gray-200"
+        className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-all border border-transparent hover:border-gray-200"
       >
+        <span className="sm:hidden uppercase">{currentLang?.code}</span>
         <span className="hidden sm:inline">{currentLang?.label}</span>
         <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
