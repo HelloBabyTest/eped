@@ -28,7 +28,12 @@ export default function Profile() {
         .single();
 
       if (error) throw error;
-      setProfile(data);
+      
+      // Fallback to auth email if profile email is missing
+      setProfile({
+        ...data,
+        email: data.email || user.email
+      });
     } catch (err: any) {
       setError(err.message);
     } finally {
