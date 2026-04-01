@@ -173,7 +173,7 @@ export default function LoginPage() {
 
             <div className="space-y-4">
               <label className="block text-sm font-medium text-gray-700">
-                Xavfsizlik kodi (CAPTCHA)
+                Xavfsizlik kodi
               </label>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Captcha onCaptchaChange={setGeneratedCaptcha} />

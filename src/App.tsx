@@ -11,6 +11,7 @@ import AcademicWork from './pages/AcademicWork';
 import MethodicalWork from './pages/MethodicalWork';
 import ScientificWork from './pages/ScientificWork';
 import MentorWork from './pages/MentorWork';
+import AdminDashboard from './pages/AdminDashboard';
 import { isSupabaseConfigured } from './lib/supabase';
 import { LanguageProvider } from './contexts/LanguageContext';
 
@@ -42,13 +43,6 @@ const RahbariyatDashboard = () => (
   <div className="min-h-screen pt-20 px-8">
     <h1 className="text-3xl font-bold">Rahbariyat Paneli</h1>
     <p className="mt-4 text-gray-600">Xush kelibsiz! Bu yerda siz o'qituvchilar faoliyatini kuzatishingiz mumkin.</p>
-  </div>
-);
-
-const AdminDashboard = () => (
-  <div className="min-h-screen pt-20 px-8">
-    <h1 className="text-3xl font-bold">Admin Paneli</h1>
-    <p className="mt-4 text-gray-600">Xush kelibsiz! Tizim sozlamalari va foydalanuvchilarni boshqarish.</p>
   </div>
 );
 
