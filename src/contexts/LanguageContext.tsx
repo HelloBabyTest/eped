@@ -191,6 +191,43 @@ const translations: Translations = {
     ru: 'Регистрация',
     en: 'Register',
   },
+  // Theme Translations
+  themeLight: {
+    uz: 'Yorug\'',
+    ru: 'Светлая',
+    en: 'Light',
+  },
+  themeDark: {
+    uz: 'Qorong\'u',
+    ru: 'Темная',
+    en: 'Dark',
+  },
+  themeSystem: {
+    uz: 'Tizimli',
+    ru: 'Системная',
+    en: 'System',
+  },
+  // Footer Translations
+  footerAbout: {
+    uz: 'Biz haqimizda',
+    ru: 'О нас',
+    en: 'About Us',
+  },
+  footerHelp: {
+    uz: 'Yordam',
+    ru: 'Помощь',
+    en: 'Help',
+  },
+  footerPrivacy: {
+    uz: 'Maxfiylik siyosati',
+    ru: 'Политика конфиденциальности',
+    en: 'Privacy Policy',
+  },
+  footerCopyright: {
+    uz: '© 2026 E-Pedagog. Barcha huquqlar himoyalangan.',
+    ru: '© 2026 E-Pedagog. Все права защищены.',
+    en: '© 2026 E-Pedagog. All rights reserved.',
+  },
 };
 
 interface LanguageContextType {

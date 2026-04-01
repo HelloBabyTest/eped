@@ -19,7 +19,7 @@ export default function LanguageSwitcher() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-all border border-transparent hover:border-gray-200"
+        className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
       >
         <span className="sm:hidden uppercase">{currentLang?.code}</span>
         <span className="hidden sm:inline">{currentLang?.label}</span>
@@ -34,7 +34,7 @@ export default function LanguageSwitcher() {
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50 overflow-hidden"
+              className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 py-2 z-50 overflow-hidden"
             >
               {languages.map((lang) => (
                 <button
@@ -45,8 +45,8 @@ export default function LanguageSwitcher() {
                   }}
                   className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm transition-colors ${
                     language === lang.code 
-                      ? 'bg-indigo-50 text-indigo-600 font-semibold' 
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 font-semibold' 
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                   }`}
                 >
                   {lang.label}
