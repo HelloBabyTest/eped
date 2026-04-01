@@ -1,8 +1,11 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, LayoutDashboard, FileText, Users, ArrowRight } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function LandingPage() {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-white pt-16">
       {/* Hero Section */}
@@ -19,28 +22,28 @@ export default function LandingPage() {
             transition={{ duration: 0.5 }}
           >
             <span className="inline-block px-4 py-1.5 mb-6 text-sm font-semibold tracking-wide text-indigo-600 uppercase bg-indigo-50 rounded-full">
-              Zamonaviy Ta'lim Tizimi
+              {t('heroBadge')}
             </span>
             <h1 className="text-5xl lg:text-7xl font-extrabold text-gray-900 tracking-tight mb-8">
-              O'qituvchilar uchun <br />
-              <span className="text-indigo-600">Elektron Ish Rejasi</span>
+              {t('heroTitle1')} <br />
+              <span className="text-indigo-600">{t('heroTitle2')}</span>
             </h1>
             <p className="max-w-2xl mx-auto text-xl text-gray-600 mb-10 leading-relaxed">
-              E-Pedagog platformasi orqali o'z ish rejalaringizni boshqaring, hisobotlarni topshiring va ta'lim sifatini yangi bosqichga olib chiqing.
+              {t('heroDesc')}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 to="/register"
                 className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200 flex items-center justify-center gap-2"
               >
-                Hoziroq boshlang
+                {t('startNow')}
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
                 to="/login"
                 className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-gray-700 bg-white border-2 border-gray-100 rounded-xl hover:border-indigo-600 hover:text-indigo-600 transition-all"
               >
-                Tizimga kirish
+                {t('loginBtn')}
               </Link>
             </div>
           </motion.div>
@@ -50,18 +53,18 @@ export default function LandingPage() {
             {[
               {
                 icon: LayoutDashboard,
-                title: "Shaxsiy Kabinet",
-                desc: "Har bir o'qituvchi uchun qulay va intuitiv boshqaruv paneli."
+                title: t('feat1Title'),
+                desc: t('feat1Desc')
               },
               {
                 icon: FileText,
-                title: "Elektron Hisobotlar",
-                desc: "Qog'ozbozlikdan voz keching, barcha hisobotlar raqamli formatda."
+                title: t('feat2Title'),
+                desc: t('feat2Desc')
               },
               {
                 icon: Users,
-                title: "Rahbariyat Nazorati",
-                desc: "O'quv jarayonini real vaqt rejimida kuzatish va tahlil qilish."
+                title: t('feat3Title'),
+                desc: t('feat3Desc')
               }
             ].map((feature, i) => (
               <motion.div
@@ -87,10 +90,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
             {[
-              { label: "O'qituvchilar", value: "10,000+" },
-              { label: "Maktablar", value: "500+" },
-              { label: "Hisobotlar", value: "1M+" },
-              { label: "Samaradorlik", value: "95%" }
+              { label: t('statTeachers'), value: "10,000+" },
+              { label: t('statSchools'), value: "500+" },
+              { label: t('statReports'), value: "1M+" },
+              { label: t('statEfficiency'), value: "95%" }
             ].map((stat, i) => (
               <div key={i} className="text-white">
                 <div className="text-4xl font-bold mb-2">{stat.value}</div>

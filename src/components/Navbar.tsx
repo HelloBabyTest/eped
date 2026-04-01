@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
 import { BookOpen, LogIn, UserPlus } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Navbar() {
+  const { t } = useLanguage();
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -24,14 +27,14 @@ export default function Navbar() {
               className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
             >
               <LogIn className="w-4 h-4" />
-              <span className="hidden xs:inline">Kirish</span>
+              <span className="hidden xs:inline">{t('navLogin')}</span>
             </Link>
             <Link 
               to="/register" 
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all shadow-sm hover:shadow-md"
             >
               <UserPlus className="w-4 h-4" />
-              <span className="hidden sm:inline">Ro'yxatdan o'tish</span>
+              <span className="hidden sm:inline">{t('navRegister')}</span>
             </Link>
           </div>
         </div>

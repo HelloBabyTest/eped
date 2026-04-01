@@ -99,6 +99,98 @@ const translations: Translations = {
     ru: 'НОРМЫ',
     en: 'NORMS',
   },
+  // Landing Page Translations
+  heroBadge: {
+    uz: 'Zamonaviy Ta\'lim Tizimi',
+    ru: 'Современная Система Образования',
+    en: 'Modern Education System',
+  },
+  heroTitle1: {
+    uz: 'O\'qituvchilar uchun',
+    ru: 'Для преподавателей',
+    en: 'For Teachers',
+  },
+  heroTitle2: {
+    uz: 'Elektron Ish Rejasi',
+    ru: 'Электронный План Работы',
+    en: 'Electronic Work Plan',
+  },
+  heroDesc: {
+    uz: 'E-Pedagog platformasi orqali o\'z ish rejalaringizni boshqaring, hisobotlarni topshiring va ta\'lim sifatini yangi bosqichga olib chiqing.',
+    ru: 'Управляйте своими планами работы, сдавайте отчеты и выводите качество образования на новый уровень через платформу E-Pedagog.',
+    en: 'Manage your work plans, submit reports, and take the quality of education to a new level through the E-Pedagog platform.',
+  },
+  startNow: {
+    uz: 'Hoziroq boshlang',
+    ru: 'Начать сейчас',
+    en: 'Start Now',
+  },
+  loginBtn: {
+    uz: 'Tizimga kirish',
+    ru: 'Войти в систему',
+    en: 'Login',
+  },
+  feat1Title: {
+    uz: 'Shaxsiy Kabinet',
+    ru: 'Личный Кабинет',
+    en: 'Personal Cabinet',
+  },
+  feat1Desc: {
+    uz: 'Har bir o\'qituvchi uchun qulay va intuitiv boshqaruv paneli.',
+    ru: 'Удобная и интуитивно понятная панель управления для каждого учителя.',
+    en: 'A convenient and intuitive control panel for every teacher.',
+  },
+  feat2Title: {
+    uz: 'Elektron Hisobotlar',
+    ru: 'Электронные Отчеты',
+    en: 'Electronic Reports',
+  },
+  feat2Desc: {
+    uz: 'Qog\'ozbozlikdan voz keching, barcha hisobotlar raqamli formatda.',
+    ru: 'Откажитесь от бумажной волокиты, все отчеты в цифровом формате.',
+    en: 'Say goodbye to paperwork, all reports are in digital format.',
+  },
+  feat3Title: {
+    uz: 'Rahbariyat Nazorati',
+    ru: 'Контроль Руководства',
+    en: 'Management Control',
+  },
+  feat3Desc: {
+    uz: 'O\'quv jarayonini real vaqt rejimida kuzatish va tahlil qilish.',
+    ru: 'Мониторинг и анализ учебного процесса в режиме реального времени.',
+    en: 'Monitoring and analyzing the educational process in real time.',
+  },
+  statTeachers: {
+    uz: 'O\'qituvchilar',
+    ru: 'Учителя',
+    en: 'Teachers',
+  },
+  statSchools: {
+    uz: 'Maktablar',
+    ru: 'Школы',
+    en: 'Schools',
+  },
+  statReports: {
+    uz: 'Hisobotlar',
+    ru: 'Отчеты',
+    en: 'Reports',
+  },
+  statEfficiency: {
+    uz: 'Samaradorlik',
+    ru: 'Эффективность',
+    en: 'Efficiency',
+  },
+  // Navbar Translations
+  navLogin: {
+    uz: 'Kirish',
+    ru: 'Вход',
+    en: 'Login',
+  },
+  navRegister: {
+    uz: 'Ro\'yxatdan o\'tish',
+    ru: 'Регистрация',
+    en: 'Register',
+  },
 };
 
 interface LanguageContextType {
