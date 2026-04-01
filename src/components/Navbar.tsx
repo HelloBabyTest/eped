@@ -15,7 +15,7 @@ export default function Navbar() {
             <div className="p-1.5 sm:p-2 bg-indigo-600 rounded-lg group-hover:bg-indigo-700 transition-colors">
               <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <span className="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400">
+            <span className="hidden sm:block text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400">
               E-Pedagog
             </span>
           </Link>

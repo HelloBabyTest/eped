@@ -205,15 +205,15 @@ export default function AcademicWork() {
     <div className="max-w-full overflow-x-hidden">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{t('academicWork')}</h1>
-          <p className="text-gray-500 mt-1">O'quv yuklamalarini boshqarish jadvali.</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('academicWork')}</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">O'quv yuklamalarini boshqarish jadvali.</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
           {!isEditing ? (
             <button
               onClick={() => setIsEditing(true)}
-              className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+              className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-none"
             >
               <Pencil className="w-4 h-4" />
               Tahrirlash
@@ -222,7 +222,7 @@ export default function AcademicWork() {
             <>
               <button
                 onClick={handleReset}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-red-600 rounded-xl font-semibold hover:bg-red-50 transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-red-600 dark:text-red-400 rounded-xl font-semibold hover:bg-red-50 dark:hover:bg-red-900/30 transition-all shadow-sm"
                 title="Jadvalni boshlang'ich holatga qaytarish"
               >
                 <Trash2 className="w-4 h-4" />
@@ -230,21 +230,21 @@ export default function AcademicWork() {
               </button>
               <button
                 onClick={addRow}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm"
               >
                 <Rows className="w-4 h-4" />
                 Qator qo'shish
               </button>
               <button
                 onClick={addColumn}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm"
               >
                 <Columns className="w-4 h-4" />
                 Ustun qo'shish
               </button>
               <button
                 onClick={handleCancel}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm"
               >
                 <RotateCcw className="w-4 h-4" />
                 Bekor qilish
@@ -252,7 +252,7 @@ export default function AcademicWork() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 disabled:opacity-50"
+                className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-none disabled:opacity-50"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 {t('save')}
@@ -263,13 +263,13 @@ export default function AcademicWork() {
       </div>
 
       {/* Semester Selection Tabs */}
-      <div className="flex items-center p-1 bg-gray-100 rounded-xl w-fit mb-6">
+      <div className="flex items-center p-1 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit mb-6">
         <button
           onClick={() => setActiveSemester('kuzgi')}
           className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
             activeSemester === 'kuzgi'
-              ? 'bg-white text-indigo-600 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
         >
           Kuzgi semestr
@@ -278,8 +278,8 @@ export default function AcademicWork() {
           onClick={() => setActiveSemester('bahorgi')}
           className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
             activeSemester === 'bahorgi'
-              ? 'bg-white text-indigo-600 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
         >
           Bahorgi semestr
@@ -292,10 +292,10 @@ export default function AcademicWork() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mb-6 bg-red-50 border-l-4 border-red-400 p-4 flex items-center gap-3"
+            className="mb-6 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-400 p-4 flex items-center gap-3"
           >
             <AlertCircle className="w-5 h-5 text-red-400" />
-            <p className="text-sm text-red-700">{error}</p>
+            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
           </motion.div>
         )}
         {success && (
@@ -303,17 +303,17 @@ export default function AcademicWork() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4 px-5 py-3.5 bg-green-50 border border-green-200 rounded-2xl shadow-2xl shadow-green-200/50 w-auto max-w-[95vw] md:max-w-md"
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4 px-5 py-3.5 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-2xl shadow-2xl shadow-green-200/50 dark:shadow-none w-auto max-w-[95vw] md:max-w-md"
           >
-            <div className="flex-shrink-0 bg-green-100 p-1.5 rounded-full">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
+            <div className="flex-shrink-0 bg-green-100 dark:bg-green-800/50 p-1.5 rounded-full">
+              <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
             </div>
-            <p className="text-sm font-semibold text-green-900 flex-1 whitespace-normal break-words leading-relaxed">
+            <p className="text-sm font-semibold text-green-900 dark:text-green-300 flex-1 whitespace-normal break-words leading-relaxed">
               Ma'lumotlar muvaffaqiyatli saqlandi!
             </p>
             <button 
               onClick={() => setSuccess(false)}
-              className="flex-shrink-0 p-1.5 hover:bg-green-100 rounded-xl transition-all text-green-600 hover:text-green-800"
+              className="flex-shrink-0 p-1.5 hover:bg-green-100 dark:hover:bg-green-800/50 rounded-xl transition-all text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
               title="Yopish"
             >
               <X className="w-4 h-4" />
@@ -322,16 +322,16 @@ export default function AcademicWork() {
         )}
       </AnimatePresence>
 
-      <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto relative z-0">
           <table className="w-full border-collapse min-w-[1200px]">
             <thead>
-              <tr className="bg-gray-100 border-b-2 border-gray-300">
+              <tr className="bg-gray-100 dark:bg-gray-700 border-b-2 border-gray-300 dark:border-gray-600">
                 {currentGrid[0] && currentGrid[0].map((cell, colIndex) => (
                   <th 
                     key={colIndex} 
-                    className={`border border-gray-300 p-0 relative group min-w-[100px] ${
-                      colIndex === 0 ? 'sticky left-0 z-20 bg-gray-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]' : ''
+                    className={`border border-gray-300 dark:border-gray-600 p-0 relative group min-w-[100px] ${
+                      colIndex === 0 ? 'sticky left-0 z-20 bg-gray-100 dark:bg-gray-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]' : ''
                     }`}
                     style={{ width: colIndex === 0 ? '50px' : 'auto' }}
                   >
@@ -342,7 +342,7 @@ export default function AcademicWork() {
                             value={cell}
                             onChange={(e) => updateCell(0, colIndex, e.target.value)}
                             placeholder="Sarlavha"
-                            className="w-full h-12 px-2 bg-transparent font-bold text-gray-800 text-xs sm:text-sm text-center uppercase tracking-wider outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                            className="w-full h-12 px-2 bg-transparent font-bold text-gray-800 dark:text-gray-200 text-xs sm:text-sm text-center uppercase tracking-wider outline-none focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                           />
                           <button
                             onClick={() => removeColumn(colIndex)}
@@ -353,44 +353,44 @@ export default function AcademicWork() {
                           </button>
                         </>
                       ) : (
-                        <div className="w-full h-12 px-2 flex items-center justify-center font-bold text-gray-800 text-xs sm:text-sm uppercase tracking-wider">
+                        <div className="w-full h-12 px-2 flex items-center justify-center font-bold text-gray-800 dark:text-gray-200 text-xs sm:text-sm uppercase tracking-wider">
                           {cell}
                         </div>
                       )}
                     </div>
                   </th>
                 ))}
-                {isEditing && <th className="w-12 border border-gray-300 bg-gray-100"></th>}
+                {isEditing && <th className="w-12 border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700"></th>}
               </tr>
             </thead>
             <tbody>
               {currentGrid.slice(1).map((row, rowIndex) => (
-                <tr key={rowIndex + 1} className="hover:bg-indigo-50/30 transition-colors group">
+                <tr key={rowIndex + 1} className="hover:bg-indigo-50/30 dark:hover:bg-indigo-900/20 transition-colors group">
                   {row.map((cell, colIndex) => (
                     <td 
                       key={colIndex} 
-                      className={`border border-gray-200 p-0 ${
-                        colIndex === 0 ? 'sticky left-0 z-10 bg-white group-hover:bg-indigo-50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]' : ''
+                      className={`border border-gray-200 dark:border-gray-700 p-0 ${
+                        colIndex === 0 ? 'sticky left-0 z-10 bg-white dark:bg-gray-800 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]' : ''
                       }`}
                     >
                       {isEditing ? (
                         <input
                           value={cell}
                           onChange={(e) => updateCell(rowIndex + 1, colIndex, e.target.value)}
-                          className="w-full h-10 px-3 bg-transparent text-gray-700 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                          className="w-full h-10 px-3 bg-transparent text-gray-700 dark:text-gray-300 text-sm outline-none focus:bg-white dark:focus:bg-gray-700 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                         />
                       ) : (
-                        <div className="w-full h-10 px-3 flex items-center text-gray-700 text-sm">
+                        <div className="w-full h-10 px-3 flex items-center text-gray-700 dark:text-gray-300 text-sm">
                           {cell}
                         </div>
                       )}
                     </td>
                   ))}
                   {isEditing && (
-                    <td className="border border-gray-200 p-0 text-center bg-gray-50 group-hover:bg-red-50 transition-colors">
+                    <td className="border border-gray-200 dark:border-gray-700 p-0 text-center bg-gray-50 dark:bg-gray-800/50 group-hover:bg-red-50 dark:group-hover:bg-red-900/30 transition-colors">
                       <button
                         onClick={() => removeRow(rowIndex + 1)}
-                        className="w-full h-10 flex items-center justify-center text-gray-400 hover:text-red-600 transition-colors"
+                        className="w-full h-10 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                         title="Qatorni o'chirish"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -404,7 +404,7 @@ export default function AcademicWork() {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center gap-4 text-sm text-gray-400 italic">
+      <div className="mt-6 flex items-center gap-4 text-sm text-gray-400 dark:text-gray-500 italic">
         <AlertCircle className="w-4 h-4" />
         <span>Jadval katakchalarini to'g'ridan-to'g'ri tahrirlashingiz mumkin. O'zgarishlarni saqlashni unutmang.</span>
       </div>

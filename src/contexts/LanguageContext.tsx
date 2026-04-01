@@ -99,6 +99,62 @@ const translations: Translations = {
     ru: 'НОРМЫ',
     en: 'NORMS',
   },
+  // Dashboard Translations
+  pedagogDashboardTitle: {
+    uz: 'O\'qituvchi Boshqaruv Paneli',
+    ru: 'Панель Управления Учителя',
+    en: 'Teacher Dashboard',
+  },
+  pedagogDashboardDesc: {
+    uz: 'Xush kelibsiz! Bu yerda siz o\'z ish rejalaringizni boshqarishingiz, hisobotlarni topshirishingiz va ta\'lim sifatini kuzatishingiz mumkin.',
+    ru: 'Добро пожаловать! Здесь вы можете управлять своими планами работы, сдавать отчеты и следить за качеством образования.',
+    en: 'Welcome! Here you can manage your work plans, submit reports, and monitor the quality of education.',
+  },
+  scheduleTitle: {
+    uz: 'Dars jadvali',
+    ru: 'Расписание уроков',
+    en: 'Class Schedule',
+  },
+  scheduleDesc: {
+    uz: 'Haftalik dars jadvalingizni ko\'rish va tahrirlash.',
+    ru: 'Просмотр и редактирование вашего еженедельного расписания уроков.',
+    en: 'View and edit your weekly class schedule.',
+  },
+  studentsTitle: {
+    uz: 'O\'quvchilar',
+    ru: 'Ученики',
+    en: 'Students',
+  },
+  studentsDesc: {
+    uz: 'Sinfingizdagi o\'quvchilar ro\'yxati va baholari.',
+    ru: 'Список учеников в вашем классе и их оценки.',
+    en: 'List of students in your class and their grades.',
+  },
+  reportsTitle: {
+    uz: 'Hisobotlar',
+    ru: 'Отчеты',
+    en: 'Reports',
+  },
+  reportsDesc: {
+    uz: 'Oylik va choraklik hisobotlarni tayyorlash.',
+    ru: 'Подготовка ежемесячных и квартальных отчетов.',
+    en: 'Preparation of monthly and quarterly reports.',
+  },
+  rahbariyatDashboardTitle: {
+    uz: 'Rahbariyat Paneli',
+    ru: 'Панель Руководства',
+    en: 'Management Dashboard',
+  },
+  rahbariyatDashboardDesc: {
+    uz: 'Xush kelibsiz! Bu yerda siz o\'qituvchilar faoliyatini kuzatishingiz mumkin.',
+    ru: 'Добро пожаловать! Здесь вы можете следить за деятельностью учителей.',
+    en: 'Welcome! Here you can monitor the activities of teachers.',
+  },
+  placeholderViewDesc: {
+    uz: 'Ushbu bo\'lim tez orada ishga tushiriladi.',
+    ru: 'Этот раздел скоро будет запущен.',
+    en: 'This section will be launched soon.',
+  },
   // Landing Page Translations
   heroBadge: {
     uz: 'Zamonaviy Ta\'lim Tizimi',

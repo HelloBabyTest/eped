@@ -150,16 +150,16 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Admin Paneli</h1>
-        <p className="mt-2 text-gray-600">Foydalanuvchilar va ularning fayllarini boshqarish</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Paneli</h1>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">Foydalanuvchilar va ularning fayllarini boshqarish</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Users List */}
-        <div className="lg:col-span-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-[800px]">
-          <div className="p-4 border-b border-gray-200 bg-gray-50">
-            <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-              <User className="w-5 h-5 text-blue-600" />
+        <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col h-[800px]">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+              <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               Foydalanuvchilar ({filteredUsers.length})
             </h2>
             <div className="mt-4 relative">
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
                 placeholder="Qidirish..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
           </div>
@@ -180,7 +180,7 @@ export default function AdminDashboard() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
             ) : filteredUsers.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 Foydalanuvchilar topilmadi
               </div>
             ) : (
@@ -191,13 +191,13 @@ export default function AdminDashboard() {
                     onClick={() => handleUserSelect(user)}
                     className={`p-4 rounded-lg cursor-pointer transition-colors border ${
                       selectedUser?.id === user.id
-                        ? 'bg-blue-50 border-blue-200'
-                        : 'bg-white border-gray-100 hover:bg-gray-50'
+                        ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800'
+                        : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                     }`}
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-medium text-gray-900">{user.full_name || 'Ismi kiritilmagan'}</h3>
+                        <h3 className="font-medium text-gray-900 dark:text-white">{user.full_name || 'Ismi kiritilmagan'}</h3>
                         <p className="text-sm text-gray-500">{user.email || 'Email mavjud emas'}</p>
                       </div>
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -216,24 +216,24 @@ export default function AdminDashboard() {
         </div>
 
         {/* User Details & Files */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-[800px]">
+        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col h-[800px]">
           {selectedUser ? (
             <>
-              <div className="p-6 border-b border-gray-200 bg-gray-50 flex justify-between items-start">
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex justify-between items-start">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{selectedUser.full_name}</h2>
-                  <div className="mt-2 space-y-1 text-sm text-gray-600">
-                    <p><span className="font-medium">Email:</span> {selectedUser.email}</p>
-                    <p><span className="font-medium">ID:</span> {selectedUser.id}</p>
-                    <p><span className="font-medium">Rol:</span> {selectedUser.role}</p>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedUser.full_name}</h2>
+                  <div className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p><span className="font-medium text-gray-900 dark:text-gray-300">Email:</span> {selectedUser.email}</p>
+                    <p><span className="font-medium text-gray-900 dark:text-gray-300">ID:</span> {selectedUser.id}</p>
+                    <p><span className="font-medium text-gray-900 dark:text-gray-300">Rol:</span> {selectedUser.role}</p>
                     {selectedUser.created_at && (
-                      <p><span className="font-medium">Ro'yxatdan o'tgan sana:</span> {new Date(selectedUser.created_at).toLocaleDateString('uz-UZ')}</p>
+                      <p><span className="font-medium text-gray-900 dark:text-gray-300">Ro'yxatdan o'tgan sana:</span> {new Date(selectedUser.created_at).toLocaleDateString('uz-UZ')}</p>
                     )}
                   </div>
                 </div>
                 <button
                   onClick={() => handleDeleteUser(selectedUser.id)}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                   Profilni o'chirish
@@ -241,8 +241,8 @@ export default function AdminDashboard() {
               </div>
 
               <div className="p-6 flex-1 overflow-y-auto">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-600" />
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   Foydalanuvchi fayllari va eslatmalari
                 </h3>
 
@@ -251,21 +251,21 @@ export default function AdminDashboard() {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                   </div>
                 ) : userFiles.length === 0 ? (
-                  <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                    <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-500">Bu foydalanuvchida hozircha fayllar yo'q.</p>
+                  <div className="text-center py-12 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">
+                    <FileText className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400">Bu foydalanuvchida hozircha fayllar yo'q.</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {userFiles.map((file) => (
-                      <div key={file.id} className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+                      <div key={file.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow">
                         <div className="flex justify-between items-start mb-3">
-                          <h4 className="font-medium text-gray-900 line-clamp-2" title={file.title}>
+                          <h4 className="font-medium text-gray-900 dark:text-white line-clamp-2" title={file.title}>
                             {file.title}
                           </h4>
                           <button
                             onClick={() => handleDeleteFile(file.id, file.file_name, file.user_id)}
-                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                             title="O'chirish"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -273,14 +273,14 @@ export default function AdminDashboard() {
                         </div>
                         
                         {file.file_name && (
-                          <div className="flex items-center gap-2 text-sm text-gray-500 mb-4 bg-gray-50 p-2 rounded-lg">
+                          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-4 bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg">
                             <FileText className="w-4 h-4 flex-shrink-0" />
                             <span className="truncate" title={file.file_name}>{file.file_name}</span>
                           </div>
                         )}
                         
-                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                          <span className="text-xs text-gray-400">
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                          <span className="text-xs text-gray-400 dark:text-gray-500">
                             {new Date(file.created_at).toLocaleDateString('uz-UZ')}
                           </span>
                           {file.file_url && (
@@ -289,7 +289,7 @@ export default function AdminDashboard() {
                                 href={file.file_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
+                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-sm font-medium"
                               >
                                 <Eye className="w-4 h-4" />
                                 Ko'rish
@@ -297,7 +297,7 @@ export default function AdminDashboard() {
                               <a
                                 href={file.file_url}
                                 download
-                                className="flex items-center gap-1 px-3 py-1.5 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
+                                className="flex items-center gap-1 px-3 py-1.5 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
                               >
                                 <Download className="w-4 h-4" />
                                 Yuklash
@@ -312,8 +312,8 @@ export default function AdminDashboard() {
               </div>
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500">
-              <Shield className="w-16 h-16 text-gray-300 mb-4" />
+            <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+              <Shield className="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" />
               <p className="text-lg">Foydalanuvchi ma'lumotlarini ko'rish uchun</p>
               <p>ro'yxatdan birortasini tanlang</p>
             </div>

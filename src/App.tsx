@@ -13,48 +13,57 @@ import ScientificWork from './pages/ScientificWork';
 import MentorWork from './pages/MentorWork';
 import AdminDashboard from './pages/AdminDashboard';
 import { isSupabaseConfigured } from './lib/supabase';
-import { LanguageProvider } from './contexts/LanguageContext';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 
 // Placeholder Dashboard Components
-const PedagogDashboard = () => (
-  <div className="max-w-6xl mx-auto">
-    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">O'qituvchi Boshqaruv Paneli</h1>
-    <p className="mt-4 text-gray-600 dark:text-gray-300 leading-relaxed">
-      Xush kelibsiz! Bu yerda siz o'z ish rejalaringizni boshqarishingiz, hisobotlarni topshirishingiz va ta'lim sifatini kuzatishingiz mumkin.
-    </p>
-    
-    <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {[
-        { title: 'Dars jadvali', desc: 'Haftalik dars jadvalingizni ko\'rish va tahrirlash.', icon: '📅' },
-        { title: 'O\'quvchilar', desc: 'Sinfingizdagi o\'quvchilar ro\'yxati va baholari.', icon: '🎓' },
-        { title: 'Hisobotlar', desc: 'Oylik va choraklik hisobotlarni tayyorlash.', icon: '📊' },
-      ].map((card, i) => (
-        <div key={i} className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all">
-          <div className="text-4xl mb-4">{card.icon}</div>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{card.title}</h3>
-          <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{card.desc}</p>
-        </div>
-      ))}
+const PedagogDashboard = () => {
+  const { t } = useLanguage();
+  return (
+    <div className="max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('pedagogDashboardTitle')}</h1>
+      <p className="mt-4 text-gray-600 dark:text-gray-300 leading-relaxed">
+        {t('pedagogDashboardDesc')}
+      </p>
+      
+      <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {[
+          { title: t('scheduleTitle'), desc: t('scheduleDesc'), icon: '📅' },
+          { title: t('studentsTitle'), desc: t('studentsDesc'), icon: '🎓' },
+          { title: t('reportsTitle'), desc: t('reportsDesc'), icon: '📊' },
+        ].map((card, i) => (
+          <div key={i} className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all">
+            <div className="text-4xl mb-4">{card.icon}</div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{card.title}</h3>
+            <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{card.desc}</p>
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
-const RahbariyatDashboard = () => (
-  <div className="min-h-screen pt-20 px-8">
-    <h1 className="text-3xl font-bold dark:text-white">Rahbariyat Paneli</h1>
-    <p className="mt-4 text-gray-600 dark:text-gray-300">Xush kelibsiz! Bu yerda siz o'qituvchilar faoliyatini kuzatishingiz mumkin.</p>
-  </div>
-);
-
-const PlaceholderView = ({ title }: { title: string }) => (
-  <div className="max-w-6xl mx-auto">
-    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{title}</h1>
-    <div className="mt-12 p-20 border-2 border-gray-100 dark:border-gray-700 rounded-3xl text-center bg-white dark:bg-gray-800 shadow-sm">
-      <p className="text-gray-500 dark:text-gray-400 text-lg">Ushbu bo'lim tez orada ishga tushiriladi.</p>
+const RahbariyatDashboard = () => {
+  const { t } = useLanguage();
+  return (
+    <div className="min-h-screen pt-20 px-8">
+      <h1 className="text-3xl font-bold dark:text-white">{t('rahbariyatDashboardTitle')}</h1>
+      <p className="mt-4 text-gray-600 dark:text-gray-300">{t('rahbariyatDashboardDesc')}</p>
     </div>
-  </div>
-);
+  );
+};
+
+const PlaceholderView = ({ title }: { title: string }) => {
+  const { t } = useLanguage();
+  return (
+    <div className="max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{title}</h1>
+      <div className="mt-12 p-20 border-2 border-gray-100 dark:border-gray-700 rounded-3xl text-center bg-white dark:bg-gray-800 shadow-sm">
+        <p className="text-gray-500 dark:text-gray-400 text-lg">{t('placeholderViewDesc')}</p>
+      </div>
+    </div>
+  );
+};
 
 export default function App() {
   if (!isSupabaseConfigured) {

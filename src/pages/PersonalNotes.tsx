@@ -128,12 +128,12 @@ export default function PersonalNotes() {
     <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{t('personalNotes')}</h1>
-          <p className="text-gray-500 mt-1">O'zingiz uchun muhim qaydlarni saqlang.</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('personalNotes')}</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">O'zingiz uchun muhim qaydlarni saqlang.</p>
         </div>
         <button
           onClick={() => setIsAdding(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+          className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-none"
         >
           <Plus className="w-5 h-5" />
           {t('addNote')}
@@ -141,9 +141,9 @@ export default function PersonalNotes() {
       </div>
 
       {error && (
-        <div className="mb-6 bg-red-50 border-l-4 border-red-400 p-4 flex items-center gap-3">
+        <div className="mb-6 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-400 p-4 flex items-center gap-3">
           <AlertCircle className="w-5 h-5 text-red-400" />
-          <p className="text-sm text-red-700">{error}</p>
+          <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
         </div>
       )}
 
@@ -162,39 +162,39 @@ export default function PersonalNotes() {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-8"
+                className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-2xl shadow-2xl p-8"
                 onClick={e => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">{t('addNote')}</h2>
-                  <button onClick={() => setIsAdding(false)} className="p-2 text-gray-400 hover:text-gray-600">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('addNote')}</h2>
+                  <button onClick={() => setIsAdding(false)} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                     <X className="w-6 h-6" />
                   </button>
                 </div>
 
                 <form onSubmit={handleAddNote} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('title')}</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('title')}</label>
                     <input
                       required
                       value={newNote.title}
                       onChange={e => setNewNote({ ...newNote, title: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                      className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all dark:bg-gray-700 dark:text-white"
                       placeholder="Qayd sarlavhasi..."
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('content')}</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content')}</label>
                     <textarea
                       rows={4}
                       value={newNote.content}
                       onChange={e => setNewNote({ ...newNote, content: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all resize-none"
+                      className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all resize-none dark:bg-gray-700 dark:text-white"
                       placeholder="Qayd mazmuni..."
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('file')}</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('file')}</label>
                     <div className="relative">
                       <input
                         type="file"
@@ -204,10 +204,10 @@ export default function PersonalNotes() {
                       />
                       <label
                         htmlFor="file-upload"
-                        className="flex items-center justify-center gap-2 w-full px-4 py-4 border-2 border-gray-100 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer transition-all group bg-gray-50/50"
+                        className="flex items-center justify-center gap-2 w-full px-4 py-4 border-2 border-gray-100 dark:border-gray-600 rounded-xl hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer transition-all group bg-gray-50/50 dark:bg-gray-700/50"
                       >
-                        <Upload className="w-5 h-5 text-gray-400 group-hover:text-indigo-500" />
-                        <span className="text-sm text-gray-500 group-hover:text-indigo-600">
+                        <Upload className="w-5 h-5 text-gray-400 group-hover:text-indigo-500 dark:group-hover:text-indigo-400" />
+                        <span className="text-sm text-gray-500 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                           {file ? file.name : 'Faylni tanlang (PDF, Word, Rasm...)'}
                         </span>
                       </label>
@@ -218,7 +218,7 @@ export default function PersonalNotes() {
                     <button
                       type="button"
                       onClick={() => setIsAdding(false)}
-                      className="flex-1 px-6 py-3 border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-all"
+                      className="flex-1 px-6 py-3 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                     >
                       {t('cancel')}
                     </button>
@@ -243,9 +243,9 @@ export default function PersonalNotes() {
           <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
         </div>
       ) : notes.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
-          <StickyNote className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-          <p className="text-gray-500 text-lg">{t('noNotes')}</p>
+        <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+          <StickyNote className="w-16 h-16 text-gray-200 dark:text-gray-600 mx-auto mb-4" />
+          <p className="text-gray-500 dark:text-gray-400 text-lg">{t('noNotes')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -255,27 +255,27 @@ export default function PersonalNotes() {
               key={note.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all group"
+              className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all group"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="p-2 bg-indigo-50 rounded-lg">
-                  <FileText className="w-6 h-6 text-indigo-600" />
+                <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
+                  <FileText className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <button
                   onClick={() => handleDelete(note.id, note.file_url)}
-                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                  className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1">{note.title}</h3>
-              <p className="text-gray-600 text-sm mb-6 line-clamp-3 leading-relaxed">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-1">{note.title}</h3>
+              <p className="text-gray-600 dark:text-gray-300 text-sm mb-6 line-clamp-3 leading-relaxed">
                 {note.content}
               </p>
               
               {note.file_url && (
-                <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                  <div className="flex items-center gap-2 text-sm text-gray-500 max-w-[150px]">
+                <div className="flex items-center justify-between pt-4 border-t border-gray-50 dark:border-gray-700">
+                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 max-w-[150px]">
                     <Download className="w-4 h-4 flex-shrink-0" />
                     <span className="truncate">{note.file_name}</span>
                   </div>
@@ -283,14 +283,14 @@ export default function PersonalNotes() {
                     href={note.file_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm font-bold text-indigo-600 hover:text-indigo-700"
+                    className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
                   >
                     {t('download')}
                   </a>
                 </div>
               )}
               
-              <div className="mt-4 text-[10px] text-gray-400 uppercase tracking-wider font-semibold">
+              <div className="mt-4 text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider font-semibold">
                 {new Date(note.created_at).toLocaleDateString()}
               </div>
             </motion.div>
