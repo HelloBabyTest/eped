@@ -20,11 +20,13 @@ export default function LoginPage() {
     setError(null);
 
     // CAPTCHA Validation
+    /*
     if (captchaInput.toLowerCase() !== generatedCaptcha.toLowerCase()) {
       setError("CAPTCHA xato kiritildi. Iltimos, qaytadan urinib ko'ring.");
       setLoading(false);
       return;
     }
+    */
 
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -179,6 +181,7 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* CAPTCHA section temporarily disabled
             <div className="space-y-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Xavfsizlik kodi
@@ -200,6 +203,7 @@ export default function LoginPage() {
                 </div>
               </div>
             </div>
+            */}
 
             <div>
               <button
