@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import { Printer } from 'lucide-react';
 
 const normsData = [
   {
@@ -122,6 +123,15 @@ export default function Norms() {
         animate={{ opacity: 1, y: 0 }}
         className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-6 md:p-10 border border-gray-100 dark:border-gray-700"
       >
+        <div className="flex justify-end mb-4 print-hidden">
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm"
+          >
+            <Printer className="w-4 h-4" />
+            Chop qilish
+          </button>
+        </div>
         <h1 className="text-xl md:text-2xl font-bold text-center text-gray-900 dark:text-white mb-10 leading-relaxed uppercase">
           Toshkent davlat iqtisodiyot universiteti professor-o‘qituvchilar faoliyatining auditoriya o‘quv yuklamasi hamda o‘quv-uslubiy, ilmiy-tadqiqot va «ustoz-shogird» tusdagi ishlari bo‘yicha soatlar hajmi hisoblanmaydigan ish turlari ME’YORLARI
         </h1>

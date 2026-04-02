@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { supabase } from '../lib/supabase';
-import { Save, Loader2, AlertCircle, CheckCircle, FileText, PenTool, ShieldCheck } from 'lucide-react';
+import { Save, Loader2, AlertCircle, CheckCircle, FileText, PenTool, ShieldCheck, Printer } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export default function AnnualReport() {
@@ -104,9 +104,20 @@ export default function AnnualReport() {
 
   return (
     <div className="max-w-6xl mx-auto pb-20">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white uppercase">Professor-o'qituvchining o'quv yili davomida bajargan ishlari</h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">Yillik yakuniy hisobot va tahlillar</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white uppercase">Professor-o'qituvchining o'quv yili davomida bajargan ishlari</h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">Yillik yakuniy hisobot va tahlillar</p>
+        </div>
+        <div className="print-hidden">
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm"
+          >
+            <Printer className="w-4 h-4" />
+            Chop qilish
+          </button>
+        </div>
       </div>
 
       <div className="space-y-8">

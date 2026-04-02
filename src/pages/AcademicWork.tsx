@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Plus, Save, Loader2, AlertCircle, 
   Trash2, Columns, Rows, CheckCircle2, X,
-  Pencil, RotateCcw
+  Pencil, RotateCcw, Printer
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -209,7 +209,14 @@ export default function AcademicWork() {
           <p className="text-gray-500 dark:text-gray-400 mt-1">O'quv yuklamalarini boshqarish jadvali.</p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 print-hidden">
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm"
+          >
+            <Printer className="w-4 h-4" />
+            Chop qilish
+          </button>
           {!isEditing ? (
             <button
               onClick={() => setIsEditing(true)}

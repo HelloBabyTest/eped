@@ -1,3 +1,24 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+@media print {
+  .print-hidden {
+    display: none !important;
+  }
+  body, main {
+    background-color: white !important;
+    color: black !important;
+  }
+  .print-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  /* Ensure background colors and shadows print correctly if needed, or remove them */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

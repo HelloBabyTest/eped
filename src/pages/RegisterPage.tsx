@@ -43,7 +43,7 @@ export default function RegisterPage() {
       if (authError) throw authError;
 
       if (data.user) {
-        alert("Ro'yxatdan o'tish muvaffaqiyatli! Iltimos, email manzilingizni tasdiqlang (agar kerak bo'lsa) va tizimga kiring.");
+        alert("Ro'yxatdan o'tish muvaffaqiyatli! Hisobingiz admin tomonidan tasdiqlangandan so'ng tizimga kira olasiz.");
         navigate('/login');
       }
     } catch (err: any) {

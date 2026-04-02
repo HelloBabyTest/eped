@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Trash2, Download, Eye, FileText, User, Shield, Search } from 'lucide-react';
+import { Trash2, Download, Eye, FileText, User, Shield, Search, Printer } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -8,6 +8,7 @@ interface UserProfile {
   role: string;
   email: string;
   created_at: string;
+  is_approved?: boolean;
 }
 
 interface UserFile {
@@ -113,6 +114,26 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleApproveUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_approved: true })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      setUsers(users.map(u => u.id === userId ? { ...u, is_approved: true } : u));
+      if (selectedUser?.id === userId) {
+        setSelectedUser({ ...selectedUser, is_approved: true });
+      }
+      alert('Foydalanuvchi muvaffaqiyatli tasdiqlandi.');
+    } catch (error) {
+      console.error('Error approving user:', error);
+      alert('Foydalanuvchini tasdiqlashda xatolik yuz berdi.');
+    }
+  };
+
   const handleDeleteUser = async (userId: string) => {
     if (!window.confirm('Rostdan ham bu foydalanuvchini va uning barcha ma\'lumotlarini o\'chirmoqchimisiz? Bu amalni ortga qaytarib bo\'lmaydi!')) return;
 
@@ -149,9 +170,20 @@ export default function AdminDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Paneli</h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">Foydalanuvchilar va ularning fayllarini boshqarish</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Paneli</h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">Foydalanuvchilar va ularning fayllarini boshqarish</p>
+        </div>
+        <div className="print-hidden">
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm"
+          >
+            <Printer className="w-4 h-4" />
+            Chop qilish
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -200,13 +232,20 @@ export default function AdminDashboard() {
                         <h3 className="font-medium text-gray-900 dark:text-white">{user.full_name || 'Ismi kiritilmagan'}</h3>
                         <p className="text-sm text-gray-500">{user.email || 'Email mavjud emas'}</p>
                       </div>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                        user.role === 'rahbariyat' ? 'bg-green-100 text-green-800' :
-                        'bg-blue-100 text-blue-800'
-                      }`}>
-                        {user.role}
-                      </span>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                          user.role === 'rahbariyat' ? 'bg-green-100 text-green-800' :
+                          'bg-blue-100 text-blue-800'
+                        }`}>
+                          {user.role}
+                        </span>
+                        {user.role !== 'admin' && (
+                          <span className={`text-[10px] font-bold uppercase tracking-wider ${user.is_approved ? 'text-green-500' : 'text-orange-500'}`}>
+                            {user.is_approved ? 'Tasdiqlangan' : 'Kutilmoqda'}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -231,13 +270,24 @@ export default function AdminDashboard() {
                     )}
                   </div>
                 </div>
-                <button
-                  onClick={() => handleDeleteUser(selectedUser.id)}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Profilni o'chirish
-                </button>
+                <div className="flex flex-col gap-2">
+                  {!selectedUser.is_approved && selectedUser.role !== 'admin' && (
+                    <button
+                      onClick={() => handleApproveUser(selectedUser.id)}
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
+                    >
+                      <Shield className="w-4 h-4" />
+                      Tasdiqlash
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDeleteUser(selectedUser.id)}
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Profilni o'chirish
+                  </button>
+                </div>
               </div>
 
               <div className="p-6 flex-1 overflow-y-auto">
@@ -295,8 +345,7 @@ export default function AdminDashboard() {
                                 Ko'rish
                               </a>
                               <a
-                                href={file.file_url}
-                                download
+                                href={`${file.file_url}?download=`}
                                 className="flex items-center gap-1 px-3 py-1.5 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
                               >
                                 <Download className="w-4 h-4" />

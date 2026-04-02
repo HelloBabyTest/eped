@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Plus, Save, Loader2, AlertCircle, 
   Trash2, Columns, Rows, CheckCircle2, X,
-  Pencil, RotateCcw, Paperclip, ExternalLink, FileText
+  Pencil, RotateCcw, Paperclip, ExternalLink, FileText, Printer
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -251,7 +251,14 @@ export default function ScientificWork() {
           <p className="text-gray-500 dark:text-gray-400 mt-1">Ilmiy-tadqiqot ishlarini boshqarish jadvali.</p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 print-hidden">
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm"
+          >
+            <Printer className="w-4 h-4" />
+            Chop qilish
+          </button>
           {!isEditing ? (
             <button
               onClick={() => setIsEditing(true)}
@@ -470,9 +477,7 @@ export default function ScientificWork() {
                           <span>{typeof cell === 'string' ? cell : cell.text}</span>
                           {typeof cell === 'object' && cell !== null && cell.file_url && (
                             <a 
-                              href={cell.file_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
+                              href={`${cell.file_url}?download=`} 
                               className="flex items-center gap-1 px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all text-xs font-medium"
                             >
                               <FileText className="w-3 h-3" />

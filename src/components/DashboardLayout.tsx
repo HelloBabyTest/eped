@@ -84,7 +84,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex transition-colors duration-200">
       {/* Sidebar - Desktop */}
-      <aside className="hidden lg:flex flex-col w-72 bg-white dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700 p-6 fixed h-full overflow-y-auto z-50 transition-colors duration-200">
+      <aside className="print-hidden hidden lg:flex flex-col w-72 bg-white dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700 p-6 fixed h-full overflow-y-auto z-50 transition-colors duration-200">
         <Link to={getDashboardLink()} className="flex items-center gap-2 mb-10 px-2">
           <div className="p-2 bg-indigo-600 rounded-lg">
             <BookOpen className="w-6 h-6 text-white" />
@@ -173,9 +173,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </AnimatePresence>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col lg:pl-72 min-w-0 relative">
+      <div className="flex-1 flex flex-col lg:pl-72 min-w-0 relative print-content">
         {/* Header */}
-        <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 lg:px-8 flex items-center justify-between sticky top-0 z-30 transition-colors duration-200">
+        <header className="print-hidden h-16 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 lg:px-8 flex items-center justify-between sticky top-0 z-30 transition-colors duration-200">
           <button 
             onClick={() => setIsSidebarOpen(true)}
             className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg lg:hidden"
@@ -203,7 +203,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Content */}
-        <main className="p-4 lg:p-8 flex-1 overflow-x-hidden outline-none">
+        <main className="p-4 lg:p-8 flex-1 overflow-x-hidden outline-none print-content">
           {children}
         </main>
       </div>

@@ -35,10 +35,10 @@ export default function LoginPage() {
       if (authError) throw authError;
 
       if (data.user) {
-        // Fetch user profile to get role - CHANGED to maybeSingle()
+        // Fetch user profile to get role and approval status
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, is_approved')
           .eq('id', data.user.id)
           .maybeSingle();
 
@@ -47,6 +47,14 @@ export default function LoginPage() {
         // NEW: Check if profile doesn't exist
         if (!profile) {
           setError("Profilingiz topilmadi. Iltimos, administratorga murojaat qiling yoki qaytadan ro'yxatdan o'ting.");
+          setLoading(false);
+          return;
+        }
+
+        // NEW: Check if approved
+        if (profile.role !== 'admin' && !profile.is_approved) {
+          await supabase.auth.signOut();
+          setError("Hisobingiz admin tomonidan tasdiqlanmagan. Iltimos, kuting.");
           setLoading(false);
           return;
         }

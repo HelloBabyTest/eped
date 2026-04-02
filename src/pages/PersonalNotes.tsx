@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Plus, FileText, Download, Trash2, 
-  Upload, Loader2, StickyNote, X, AlertCircle 
+  Upload, Loader2, StickyNote, X, AlertCircle, Printer
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -131,13 +131,22 @@ export default function PersonalNotes() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('personalNotes')}</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">O'zingiz uchun muhim qaydlarni saqlang.</p>
         </div>
-        <button
-          onClick={() => setIsAdding(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-none"
-        >
-          <Plus className="w-5 h-5" />
-          {t('addNote')}
-        </button>
+        <div className="flex items-center gap-3 print-hidden">
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm"
+          >
+            <Printer className="w-5 h-5" />
+            Chop qilish
+          </button>
+          <button
+            onClick={() => setIsAdding(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-none"
+          >
+            <Plus className="w-5 h-5" />
+            {t('addNote')}
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -268,10 +277,10 @@ export default function PersonalNotes() {
                   <Trash2 className="w-5 h-5" />
                 </button>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-1">{note.title}</h3>
-              <p className="text-gray-600 dark:text-gray-300 text-sm mb-6 line-clamp-3 leading-relaxed">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{note.title}</h3>
+              <div className="text-gray-600 dark:text-gray-300 text-sm mb-6 leading-relaxed whitespace-pre-wrap max-h-64 overflow-y-auto pr-2">
                 {note.content}
-              </p>
+              </div>
               
               {note.file_url && (
                 <div className="flex items-center justify-between pt-4 border-t border-gray-50 dark:border-gray-700">
@@ -280,9 +289,7 @@ export default function PersonalNotes() {
                     <span className="truncate">{note.file_name}</span>
                   </div>
                   <a
-                    href={note.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={`${note.file_url}?download=`}
                     className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
                   >
                     {t('download')}

@@ -10,14 +10,14 @@ interface Translations {
 
 const translations: Translations = {
   dashboard: {
-    uz: 'Boshqaruv paneli',
-    ru: 'Панель управления',
-    en: 'Dashboard',
+    uz: 'BOSHQARUV PANELI',
+    ru: 'ПАНЕЛЬ УПРАВЛЕНИЯ',
+    en: 'DASHBOARD',
   },
   personalNotes: {
-    uz: 'Shaxsiy qaydnomalar',
-    ru: 'Личные заметки',
-    en: 'Personal Notes',
+    uz: 'SHAXSIY QAYDNOMALAR',
+    ru: 'ЛИЧНЫЕ ЗАМЕТКИ',
+    en: 'PERSONAL NOTES',
   },
   addNote: {
     uz: 'Yangi qayd qo\'shish',

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { supabase } from '../lib/supabase';
-import { User, Mail, Shield, Save, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { User, Mail, Shield, Save, Loader2, AlertCircle, CheckCircle, Printer } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Profile() {
@@ -76,9 +76,20 @@ export default function Profile() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Profil sozlamalari</h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">Shaxsiy ma'lumotlaringizni boshqaring</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Profil sozlamalari</h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">Shaxsiy ma'lumotlaringizni boshqaring</p>
+        </div>
+        <div className="print-hidden">
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm"
+          >
+            <Printer className="w-4 h-4" />
+            Chop qilish
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
