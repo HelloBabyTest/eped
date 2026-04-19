@@ -34,7 +34,12 @@ export default function LoginPage() {
         password,
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        if (authError.message === 'Invalid login credentials') {
+          throw new Error("Email yoki parol noto'g'ri kiritildi.");
+        }
+        throw authError;
+      }
 
       if (data.user) {
         // Fetch user profile to get role and approval status
