@@ -14,6 +14,7 @@ export default function Profile() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [sessionError, setSessionError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProfile();
@@ -22,21 +23,19 @@ export default function Profile() {
 
   const fetchSessions = async () => {
     setLoadingSessions(true);
+    setSessionError(null);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.id) {
-        // We will match current session roughly if needed, or by relying on RPC
-      }
-
       // We use our custom RPC function explicitly created for sessions
       const { data, error } = await supabase.rpc('get_my_sessions');
       if (error) {
-        console.error("Sessiyalarni baholashda xatolik. RPC yaratilmagan bo'lishi mumkin.");
+        console.error("Sessiyalarni yuklashda xatolik:", error.message);
+        setSessionError(`Sessiyalar yuklanmadi. Iltimos SQL Editor'da 'get_my_sessions' funksiyasini yozing. Xatolik: ${error.message}`);
       } else if (data) {
         setSessions(data);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setSessionError(`Tizim xatosi: ${err.message}`);
     } finally {
       setLoadingSessions(false);
     }
@@ -278,17 +277,21 @@ export default function Profile() {
             <div className="flex justify-center items-center h-32">
               <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
             </div>
+          ) : sessionError ? (
+            <div className="p-8 text-center text-red-500 dark:text-red-400">
+              <AlertCircle className="w-12 h-12 text-red-300 dark:text-red-600 mx-auto mb-3" />
+              {sessionError}
+            </div>
           ) : sessions.length === 0 ? (
             <div className="p-8 text-center text-gray-500 dark:text-gray-400">
               <Globe className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-              Sessiyalar topilmadi (Yoki SQL ro'yxatdan o'tmagan).
+              Sessiyalar topilmadi.
             </div>
           ) : (
             <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {sessions.map((session, idx) => {
                 const { device, browser, icon: DeviceIcon } = parseUserAgent(session.user_agent);
-                // Just assuming the newest is the current one if currentSessionId is null since we sorted DESC
-                const isCurrent = idx === 0 || session.id === currentSessionId;
+                const isCurrent = session.is_current;
                 
                 return (
                   <div key={session.id} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
