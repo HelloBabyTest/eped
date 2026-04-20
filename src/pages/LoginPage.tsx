@@ -180,9 +180,9 @@ export default function LoginPage() {
               </div>
 
               <div className="text-sm">
-                <a href="#" className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500">
+                <Link to="/forgot-password" className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500">
                   Parolni unutdingizmi?
-                </a>
+                </Link>
               </div>
             </div>
 

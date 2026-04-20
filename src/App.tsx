@@ -6,6 +6,8 @@ import DashboardLayout from './components/DashboardLayout';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import PersonalNotes from './pages/PersonalNotes';
 import AcademicWork from './pages/AcademicWork';
 import MethodicalWork from './pages/MethodicalWork';
@@ -85,6 +87,8 @@ export default function App() {
               {/* Auth Routes (No Navbar) */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
               {/* Protected Dashboard Routes */}
               <Route path="/dashboard/pedagog" element={<DashboardLayout><PedagogDashboard /></DashboardLayout>} />
