@@ -180,15 +180,6 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Paneli</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">Foydalanuvchilar va ularning fayllarini boshqarish</p>
         </div>
-        <div className="print-hidden">
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm"
-          >
-            <Printer className="w-4 h-4" />
-            Chop qilish
-          </button>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

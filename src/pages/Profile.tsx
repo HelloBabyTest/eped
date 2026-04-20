@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { supabase } from '../lib/supabase';
-import { User, Mail, Shield, Save, Loader2, AlertCircle, CheckCircle, Printer } from 'lucide-react';
+import { User, Mail, Shield, Save, Loader2, AlertCircle, CheckCircle, Printer, Laptop, Smartphone, Globe, LogOut } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Profile() {
@@ -11,10 +11,65 @@ export default function Profile() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProfile();
+    fetchSessions();
   }, []);
+
+  const fetchSessions = async () => {
+    setLoadingSessions(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        // We will match current session roughly if needed, or by relying on RPC
+      }
+
+      // We use our custom RPC function explicitly created for sessions
+      const { data, error } = await supabase.rpc('get_my_sessions');
+      if (error) {
+        console.error("Sessiyalarni baholashda xatolik. RPC yaratilmagan bo'lishi mumkin.");
+      } else if (data) {
+        setSessions(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
+  const handleRevokeSession = async (sessionId: string) => {
+    try {
+      const { error } = await supabase.rpc('revoke_my_session', { session_id: sessionId });
+      if (error) throw error;
+      setSessions(sessions.filter(s => s.id !== sessionId));
+    } catch (err: any) {
+      alert("Sessiyani o'chirishda xatolik yuz berdi.");
+    }
+  };
+
+  const parseUserAgent = (ua: string) => {
+    if (!ua) return { device: 'Noma\'lum qurilma', browser: '', icon: Globe };
+    let device = 'Kompyuter';
+    let icon = Laptop;
+    
+    if (ua.includes('Mobile') || ua.includes('Android') || ua.includes('iPhone')) {
+      device = 'Mobil qurilma';
+      icon = Smartphone;
+    }
+    
+    let browser = 'Noma\'lum brauzer';
+    if (ua.includes('Chrome')) browser = 'Chrome';
+    else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
+    else if (ua.includes('Firefox')) browser = 'Firefox';
+    else if (ua.includes('Edge')) browser = 'Edge';
+
+    return { device, browser, icon };
+  };
 
   const fetchProfile = async () => {
     try {
@@ -212,6 +267,66 @@ export default function Profile() {
               )}
             </form>
           </motion.div>
+        </div>
+      </div>
+
+      {/* Active Sessions UI */}
+      <div className="mt-8">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Aktiv sessiyalar va qurilmalar</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+          {loadingSessions ? (
+            <div className="flex justify-center items-center h-32">
+              <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+            </div>
+          ) : sessions.length === 0 ? (
+            <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+              <Globe className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+              Sessiyalar topilmadi (Yoki SQL ro'yxatdan o'tmagan).
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
+              {sessions.map((session, idx) => {
+                const { device, browser, icon: DeviceIcon } = parseUserAgent(session.user_agent);
+                // Just assuming the newest is the current one if currentSessionId is null since we sorted DESC
+                const isCurrent = idx === 0 || session.id === currentSessionId;
+                
+                return (
+                  <div key={session.id} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className={`p-3 rounded-full ${isCurrent ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
+                        <DeviceIcon className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-bold text-gray-900 dark:text-white text-base">
+                            {device} <span className="text-sm font-normal text-gray-500 dark:text-gray-400">({browser})</span>
+                          </h4>
+                          {isCurrent && (
+                            <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold rounded-full uppercase tracking-wider">
+                              Joriy
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          IP: {session.ip || 'Noma\'lum'} • {new Date(session.created_at).toLocaleString('uz-UZ')}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {!isCurrent && (
+                      <button
+                        onClick={() => handleRevokeSession(session.id)}
+                        className="self-start sm:self-center flex items-center gap-2 px-4 py-2 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors text-sm font-medium"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Chiqarish
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
