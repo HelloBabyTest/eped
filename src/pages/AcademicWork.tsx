@@ -18,7 +18,11 @@ type SemesterData = {
   bahorgi: string[][];
 };
 
-export default function AcademicWork() {
+interface WorkProps {
+  targetUserId?: string;
+}
+
+export default function AcademicWork({ targetUserId }: WorkProps) {
   const { t } = useLanguage();
   const [grid, setGrid] = useState<SemesterData>({ kuzgi: DEFAULT_TEMPLATE, bahorgi: DEFAULT_TEMPLATE });
   const [savedData, setSavedData] = useState<SemesterData>({ kuzgi: DEFAULT_TEMPLATE, bahorgi: DEFAULT_TEMPLATE });
@@ -28,16 +32,22 @@ export default function AcademicWork() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [userRole, setUserRole] = useState<string>('pedagog');
 
   const fetchData = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+      if (profile) setUserRole(profile.role);
+
+      const queryUserId = targetUserId || user.id;
+
       const { data, error } = await supabase
         .from('academic_works')
         .select('table_data')
-        .eq('user_id', user.id)
+        .eq('user_id', queryUserId)
         .maybeSingle();
 
       if (error) throw error;
@@ -71,7 +81,7 @@ export default function AcademicWork() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [targetUserId]);
 
   useEffect(() => {
     fetchData();
@@ -86,10 +96,12 @@ export default function AcademicWork() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      const queryUserId = targetUserId || user.id;
+
       const { error } = await supabase
         .from('academic_works')
         .upsert({
-          user_id: user.id,
+          user_id: queryUserId,
           table_data: grid,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
@@ -329,35 +341,37 @@ export default function AcademicWork() {
         )}
       </AnimatePresence>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="overflow-x-auto relative z-0">
-          <table className="w-full border-collapse min-w-[1200px]">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden print:shadow-none print:border-none print:m-0 print:p-0">
+        <div className="overflow-x-auto relative z-0 print:overflow-visible">
+          <table className="w-full border-collapse min-w-[1000px] print:min-w-0 print:w-full print:text-[11px] table-fixed">
             <thead>
-              <tr className="bg-gray-100 dark:bg-gray-700 border-b-2 border-gray-300 dark:border-gray-600">
+              <tr className="bg-gray-100 dark:bg-gray-700 border-b-2 border-gray-300 dark:border-gray-600 print:bg-gray-100 print:text-black">
                 {currentGrid[0] && currentGrid[0].map((cell, colIndex) => (
                   <th 
                     key={colIndex} 
-                    className={`border border-gray-300 dark:border-gray-600 p-0 relative group min-w-[100px] ${
-                      colIndex === 0 ? 'sticky left-0 z-20 bg-gray-100 dark:bg-gray-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]' : ''
+                    className={`border border-gray-300 dark:border-gray-600 p-0 relative group ${colIndex === 0 ? 'w-[50px] print:w-[30px]' : ''} ${
+                      colIndex === 0 ? 'sticky left-0 z-20 bg-gray-100 dark:bg-gray-700 print:static print:bg-transparent shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] print:shadow-none' : ''
                     }`}
-                    style={{ width: colIndex === 0 ? '50px' : 'auto' }}
                   >
                     <div className="flex flex-col h-full">
-                      {isEditing ? (
+                      {isEditing && (userRole === 'admin' || colIndex !== 0) ? (
                         <>
                           <input
                             value={cell}
                             onChange={(e) => updateCell(0, colIndex, e.target.value)}
+                            disabled={userRole !== 'admin'}
                             placeholder="Sarlavha"
-                            className="w-full h-12 px-2 bg-transparent font-bold text-gray-800 dark:text-gray-200 text-xs sm:text-sm text-center uppercase tracking-wider outline-none focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                            className={`w-full h-12 px-2 bg-transparent font-bold text-gray-800 dark:text-gray-200 text-xs sm:text-sm text-center uppercase tracking-wider outline-none focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-indigo-500/20 transition-all ${userRole !== 'admin' ? 'cursor-not-allowed opacity-80' : ''}`}
                           />
-                          <button
-                            onClick={() => removeColumn(colIndex)}
-                            className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 opacity-0 group-hover:opacity-100 p-1.5 bg-red-500 text-white rounded-full shadow-lg transition-all hover:scale-110 z-20"
-                            title="Ustunni o'chirish"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
+                          {userRole === 'admin' && (
+                            <button
+                              onClick={() => removeColumn(colIndex)}
+                              className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 opacity-0 group-hover:opacity-100 p-1.5 bg-red-500 text-white rounded-full shadow-lg transition-all hover:scale-110 z-20"
+                              title="Ustunni o'chirish"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
                         </>
                       ) : (
                         <div className="w-full h-12 px-2 flex items-center justify-center font-bold text-gray-800 dark:text-gray-200 text-xs sm:text-sm uppercase tracking-wider">
@@ -376,11 +390,11 @@ export default function AcademicWork() {
                   {row.map((cell, colIndex) => (
                     <td 
                       key={colIndex} 
-                      className={`border border-gray-200 dark:border-gray-700 p-0 ${
-                        colIndex === 0 ? 'sticky left-0 z-10 bg-white dark:bg-gray-800 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]' : ''
+                      className={`border border-gray-200 dark:border-gray-700 p-0 print:border-gray-400 print:text-black ${
+                        colIndex === 0 ? 'sticky left-0 z-10 bg-white dark:bg-gray-800 print:static print:bg-transparent group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] print:shadow-none' : ''
                       }`}
                     >
-                      {isEditing ? (
+                      {isEditing && (userRole === 'admin' || colIndex !== 0) ? (
                         <input
                           value={cell}
                           onChange={(e) => updateCell(rowIndex + 1, colIndex, e.target.value)}

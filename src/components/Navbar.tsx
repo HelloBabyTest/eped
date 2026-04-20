@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BookOpen, LogIn, UserPlus } from 'lucide-react';
+import { BookOpen, LogIn, UserPlus, LogOut, LayoutDashboard } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import ThemeSwitcher from './ThemeSwitcher';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -82,13 +82,25 @@ export default function Navbar() {
                 </Link>
               </>
             ) : (
-              <Link 
-                to={getLogoLink()}
-                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all shadow-sm hover:shadow-md"
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('dashboard')}</span>
-              </Link>
+              <>
+                <Link 
+                  to={getLogoLink()}
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all shadow-sm hover:shadow-md"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t('dashboard')}</span>
+                </Link>
+                <button 
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    window.location.href = '/login';
+                  }}
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-sm font-medium text-red-600 hover:text-white bg-red-50 hover:bg-red-600 dark:text-red-400 dark:bg-red-900/30 dark:hover:bg-red-600 dark:hover:text-white rounded-lg transition-all"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t('logout')}</span>
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -96,5 +108,3 @@ export default function Navbar() {
     </nav>
   );
 }
-
-import { LayoutDashboard } from 'lucide-react';

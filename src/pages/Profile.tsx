@@ -128,9 +128,14 @@ export default function Profile() {
 
               <div className="grid grid-cols-1 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    To'liq ism-sharifingiz
-                  </label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      To'liq ism-sharifingiz
+                    </label>
+                    {profile?.role !== 'admin' && (
+                      <span className="text-[11px] text-gray-400 dark:text-gray-500">O'zgartirish uchun administratorga murojaat qiling</span>
+                    )}
+                  </div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <User className="h-5 w-5 text-gray-400" />
@@ -139,16 +144,23 @@ export default function Profile() {
                       type="text"
                       value={profile?.full_name || ''}
                       onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                      className="block w-full pl-10 px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                      disabled={profile?.role !== 'admin'}
+                      className={`block w-full pl-10 px-3 py-3 border rounded-xl shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white ${
+                        profile?.role !== 'admin' 
+                          ? 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-500 cursor-not-allowed' 
+                          : 'border-gray-300 dark:border-gray-600'
+                      }`}
                       placeholder="Ismingizni kiriting"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Email manzili (O'zgartirib bo'lmaydi)
-                  </label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Email manzili
+                    </label>
+                  </div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Mail className="h-5 w-5 text-gray-400" />
@@ -180,22 +192,24 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-all"
-                >
-                  {saving ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      <Save className="w-5 h-5" />
-                      Saqlash
-                    </>
-                  )}
-                </button>
-              </div>
+              {profile?.role === 'admin' && (
+                <div className="pt-4">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-all"
+                  >
+                    {saving ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <>
+                        <Save className="w-5 h-5" />
+                        Saqlash
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </form>
           </motion.div>
         </div>

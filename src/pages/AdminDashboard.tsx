@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Trash2, Download, Eye, FileText, User, Shield, Search, Printer } from 'lucide-react';
+import { Trash2, Download, Eye, FileText, User, Shield, Search, Printer, MenuSquare } from 'lucide-react';
+import AcademicWork from './AcademicWork';
+import MethodicalWork from './MethodicalWork';
+import ScientificWork from './ScientificWork';
+import MentorWork from './MentorWork';
 
 interface UserProfile {
   id: string;
@@ -27,6 +31,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [filesLoading, setFilesLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'files'|'academic'|'methodical'|'scientific'|'mentor'>('files');
 
   useEffect(() => {
     fetchUsers();
@@ -290,74 +295,106 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="p-6 flex-1 overflow-y-auto">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  Foydalanuvchi fayllari va eslatmalari
-                </h3>
+              <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <nav className="flex overflow-x-auto space-x-4 px-6 hide-scrollbar">
+                  {[
+                    { id: 'files', label: "Fayllar" },
+                    { id: 'academic', label: "O'quv ishlari" },
+                    { id: 'methodical', label: "Uslubiy ishlar" },
+                    { id: 'scientific', label: "Ilmiy ishlari" },
+                    { id: 'mentor', label: "Ustoz-shogird" },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id as any)}
+                      className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                        activeTab === tab.id
+                          ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </nav>
+              </div>
 
-                {filesLoading ? (
-                  <div className="flex justify-center items-center h-32">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  </div>
-                ) : userFiles.length === 0 ? (
-                  <div className="text-center py-12 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">
-                    <FileText className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
-                    <p className="text-gray-500 dark:text-gray-400">Bu foydalanuvchida hozircha fayllar yo'q.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {userFiles.map((file) => (
-                      <div key={file.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start mb-3">
-                          <h4 className="font-medium text-gray-900 dark:text-white line-clamp-2" title={file.title}>
-                            {file.title}
-                          </h4>
-                          <button
-                            onClick={() => handleDeleteFile(file.id, file.file_name, file.user_id)}
-                            className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                            title="O'chirish"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                        
-                        {file.file_name && (
-                          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-4 bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg">
-                            <FileText className="w-4 h-4 flex-shrink-0" />
-                            <span className="truncate" title={file.file_name}>{file.file_name}</span>
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                          <span className="text-xs text-gray-400 dark:text-gray-500">
-                            {new Date(file.created_at).toLocaleDateString('uz-UZ')}
-                          </span>
-                          {file.file_url && (
-                            <div className="flex gap-2">
-                              <a
-                                href={file.file_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-sm font-medium"
-                              >
-                                <Eye className="w-4 h-4" />
-                                Ko'rish
-                              </a>
-                              <a
-                                href={`${file.file_url}?download=`}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
-                              >
-                                <Download className="w-4 h-4" />
-                                Yuklash
-                              </a>
-                            </div>
-                          )}
-                        </div>
+              <div className="p-6 flex-1 overflow-y-auto">
+                {activeTab === 'files' && (
+                  <>
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      Foydalanuvchi fayllari va eslatmalari
+                    </h3>
+
+                    {filesLoading ? (
+                      <div className="flex justify-center items-center h-32">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                       </div>
-                    ))}
-                  </div>
+                    ) : userFiles.length === 0 ? (
+                      <div className="text-center py-12 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">
+                        <FileText className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+                        <p className="text-gray-500 dark:text-gray-400">Bu foydalanuvchida hozircha fayllar yo'q.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {userFiles.map((file) => (
+                          <div key={file.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-start mb-3">
+                              <h4 className="font-medium text-gray-900 dark:text-white line-clamp-2" title={file.title}>
+                                {file.title}
+                              </h4>
+                              <button
+                                onClick={() => handleDeleteFile(file.id, file.file_name, file.user_id)}
+                                className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                                title="O'chirish"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                            
+                            {file.file_name && (
+                              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-4 bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg">
+                                <FileText className="w-4 h-4 flex-shrink-0" />
+                                <span className="truncate" title={file.file_name}>{file.file_name}</span>
+                              </div>
+                            )}
+                            
+                            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                              <span className="text-xs text-gray-400 dark:text-gray-500">
+                                {new Date(file.created_at).toLocaleDateString('uz-UZ')}
+                              </span>
+                              {file.file_url && (
+                                <div className="flex gap-2">
+                                  <a
+                                    href={file.file_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-sm font-medium"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                    Ko'rish
+                                  </a>
+                                  <a
+                                    href={`${file.file_url}?download=`}
+                                    className="flex items-center gap-1 px-3 py-1.5 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                    Yuklash
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
+                {activeTab === 'academic' && <AcademicWork targetUserId={selectedUser.id} />}
+                {activeTab === 'methodical' && <MethodicalWork targetUserId={selectedUser.id} />}
+                {activeTab === 'scientific' && <ScientificWork targetUserId={selectedUser.id} />}
+                {activeTab === 'mentor' && <MentorWork targetUserId={selectedUser.id} />}
               </div>
             </>
           ) : (

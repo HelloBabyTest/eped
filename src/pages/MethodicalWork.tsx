@@ -22,7 +22,11 @@ const DEFAULT_TEMPLATE: CellData[][] = [
   ["1", "", "", "", "", "", "", "", "", ""]
 ];
 
-export default function MethodicalWork() {
+interface WorkProps {
+  targetUserId?: string;
+}
+
+export default function MethodicalWork({ targetUserId }: WorkProps) {
   const { t } = useLanguage();
   const [grid, setGrid] = useState<CellData[][]>(DEFAULT_TEMPLATE);
   const [savedData, setSavedData] = useState<CellData[][]>(DEFAULT_TEMPLATE);
@@ -33,16 +37,22 @@ export default function MethodicalWork() {
   const [deletingCell, setDeletingCell] = useState<{row: number, col: number} | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [userRole, setUserRole] = useState<string>('pedagog');
 
   const fetchData = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+      if (profile) setUserRole(profile.role);
+
+      const queryUserId = targetUserId || user.id;
+
       const { data, error } = await supabase
         .from('methodical_works')
         .select('table_data')
-        .eq('user_id', user.id)
+        .eq('user_id', queryUserId)
         .maybeSingle();
 
       if (error) throw error;
@@ -63,7 +73,7 @@ export default function MethodicalWork() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [targetUserId]);
 
   useEffect(() => {
     fetchData();
@@ -78,10 +88,12 @@ export default function MethodicalWork() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      const queryUserId = targetUserId || user.id;
+
       const { error } = await supabase
         .from('methodical_works')
         .upsert({
-          user_id: user.id,
+          user_id: queryUserId,
           table_data: grid,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
