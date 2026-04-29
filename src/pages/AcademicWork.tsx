@@ -101,8 +101,7 @@ export default function AcademicWork({ targetUserId }: WorkProps) {
         .upsert({
           user_id: queryUserId,
           table_data: grid,
-          updated_at: new Date().toISOString(),
-          last_modified_by: user.id
+          updated_at: new Date().toISOString()
         }, { onConflict: 'user_id' });
 
       if (error) throw error;
