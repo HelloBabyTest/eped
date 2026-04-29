@@ -45,13 +45,28 @@ export default function AcademicWork({ targetUserId }: WorkProps) {
 
       const queryUserId = targetUserId || user.id;
 
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('academic_works')
         .select('table_data, status')
         .eq('user_id', queryUserId)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error && error.message && error.message.includes('status') && !error.message.includes('relation "academic_works" does not exist')) {
+        const fallbackResult = await supabase
+          .from('academic_works')
+          .select('table_data')
+          .eq('user_id', queryUserId)
+          .maybeSingle();
+        data = fallbackResult.data;
+        error = fallbackResult.error;
+      }
+
+      if (error) {
+        if (error.message && error.message.includes('relation "academic_works" does not exist')) {
+          throw new Error("Iltimos SQL Editor'da 'academic_works' jadvalini yarating:\n\nCREATE TABLE academic_works (\n  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,\n  user_id UUID REFERENCES auth.users NOT NULL UNIQUE,\n  table_data JSONB NOT NULL,\n  status TEXT DEFAULT 'pending',\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  updated_at TIMESTAMPTZ DEFAULT NOW(),\n  last_modified_by UUID REFERENCES auth.users\n);");
+        }
+        throw error;
+      }
       
       if (data) {
         if (data.status) setWorkStatus(data.status);
@@ -105,7 +120,12 @@ export default function AcademicWork({ targetUserId }: WorkProps) {
           last_modified_by: user.id
         }, { onConflict: 'user_id' });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message && error.message.includes('relation "academic_works" does not exist')) {
+          throw new Error("Iltimos SQL Editor'da 'academic_works' jadvalini yarating:\n\nCREATE TABLE academic_works (\n  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,\n  user_id UUID REFERENCES auth.users NOT NULL UNIQUE,\n  table_data JSONB NOT NULL,\n  status TEXT DEFAULT 'pending',\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  updated_at TIMESTAMPTZ DEFAULT NOW(),\n  last_modified_by UUID REFERENCES auth.users\n);");
+        }
+        throw error;
+      }
       
       setSavedData(grid);
       setIsEditing(false);
@@ -125,7 +145,15 @@ export default function AcademicWork({ targetUserId }: WorkProps) {
         .from('academic_works')
         .update({ status: newStatus })
         .eq('user_id', queryUserId);
-      if (error) throw error;
+      if (error) {
+        if (error.message && error.message.includes('relation "academic_works" does not exist')) {
+          throw new Error("Iltimos SQL Editor'da 'academic_works' jadvalini yarating:\n\nCREATE TABLE academic_works (\n  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,\n  user_id UUID REFERENCES auth.users NOT NULL UNIQUE,\n  table_data JSONB NOT NULL,\n  status TEXT DEFAULT 'pending',\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  updated_at TIMESTAMPTZ DEFAULT NOW(),\n  last_modified_by UUID REFERENCES auth.users\n);");
+        }
+        if (error.message && error.message.includes('status')) {
+          throw new Error("Iltimos SQL Editor'da 'academic_works' jadvaliga 'status' ustunini qo'shing:\nALTER TABLE academic_works ADD COLUMN status TEXT DEFAULT 'pending';");
+        }
+        throw error;
+      }
       setWorkStatus(newStatus);
     } catch (err: any) {
       setError(err.message);
