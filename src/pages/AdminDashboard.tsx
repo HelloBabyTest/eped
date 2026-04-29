@@ -229,12 +229,15 @@ export default function AdminDashboard() {
                         <p className="text-sm text-gray-500">{user.email || 'Email mavjud emas'}</p>
                       </div>
                       <div className="flex flex-col items-end gap-1">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                          user.role === 'rahbariyat' ? 'bg-green-100 text-green-800' :
-                          'bg-blue-100 text-blue-800'
+                        <span className={`px-2 py-1 text-[10px] font-bold uppercase rounded-full ${
+                          user.role === 'admin' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300' :
+                          user.role === 'approver' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' :
+                          user.role === 'operator' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300' :
+                          'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
                         }`}>
-                          {user.role}
+                          {user.role === 'pedagog' ? 'O\'qituvchi' : 
+                           user.role === 'operator' ? 'Operator' : 
+                           user.role === 'approver' ? 'Tasdiqlovchi' : user.role}
                         </span>
                         {user.role !== 'admin' && (
                           <span className={`text-[10px] font-bold uppercase tracking-wider ${user.is_approved ? 'text-green-500' : 'text-orange-500'}`}>
@@ -254,15 +257,34 @@ export default function AdminDashboard() {
         <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col h-[800px]">
           {selectedUser ? (
             <>
-              <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex justify-between items-start">
-                <div>
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex flex-col md:flex-row justify-between items-start gap-4">
+                <div className="flex-1">
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedUser.full_name}</h2>
-                  <div className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 text-sm text-gray-600 dark:text-gray-400">
                     <p><span className="font-medium text-gray-900 dark:text-gray-300">Email:</span> {selectedUser.email}</p>
                     <p><span className="font-medium text-gray-900 dark:text-gray-300">ID:</span> {selectedUser.id}</p>
-                    <p><span className="font-medium text-gray-900 dark:text-gray-300">Rol:</span> {selectedUser.role}</p>
+                    <div className="flex items-center gap-2">
+                       <span className="font-medium text-gray-900 dark:text-gray-300">Rol:</span>
+                       <select 
+                         value={selectedUser.role} 
+                         onChange={async (e) => {
+                           const newRole = e.target.value;
+                           const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', selectedUser.id);
+                           if (!error) {
+                             setSelectedUser({...selectedUser, role: newRole});
+                             setUsers(users.map(u => u.id === selectedUser.id ? {...u, role: newRole} : u));
+                           }
+                         }}
+                         className="bg-transparent border-none p-0 text-indigo-600 dark:text-indigo-400 font-bold focus:ring-0 cursor-pointer"
+                       >
+                         <option value="pedagog">O'qituvchi</option>
+                         <option value="operator">Ma'lumot operatori</option>
+                         <option value="approver">Tasdiqlovchi</option>
+                         <option value="admin">Administrator</option>
+                       </select>
+                    </div>
                     {selectedUser.created_at && (
-                      <p><span className="font-medium text-gray-900 dark:text-gray-300">Ro'yxatdan o'tgan sana:</span> {new Date(selectedUser.created_at).toLocaleDateString('uz-UZ')}</p>
+                      <p><span className="font-medium text-gray-900 dark:text-gray-300">Sana:</span> {new Date(selectedUser.created_at).toLocaleDateString()}</p>
                     )}
                   </div>
                 </div>

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { User, Mail, Shield, Save, Loader2, AlertCircle, CheckCircle, Printer, Laptop, Smartphone, Globe, LogOut } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Profile() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -120,6 +122,11 @@ export default function Profile() {
     }
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -155,6 +162,16 @@ export default function Profile() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">{profile?.full_name || 'Foydalanuvchi'}</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wider font-semibold">{profile?.role}</p>
+            
+            <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+              <button
+                onClick={handleLogout}
+                className="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl font-semibold transition-all"
+              >
+                <LogOut className="w-5 h-5" />
+                Dasturdan chiqish
+              </button>
+            </div>
           </div>
         </div>
 

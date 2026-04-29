@@ -8,6 +8,8 @@ import Captcha from '../components/Captcha';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [selectedRole, setSelectedRole] = useState('pedagog');
+  const [rememberMe, setRememberMe] = useState(false);
   const [captchaInput, setCaptchaInput] = useState('');
   const [generatedCaptcha, setGeneratedCaptcha] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,19 +21,13 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    // CAPTCHA Validation
-    /*
-    if (captchaInput.toLowerCase() !== generatedCaptcha.toLowerCase()) {
-      setError("CAPTCHA xato kiritildi. Iltimos, qaytadan urinib ko'ring.");
-      setLoading(false);
-      return;
-    }
-    */
-
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          persistSession: rememberMe
+        }
       });
 
       if (authError) {
@@ -51,14 +47,20 @@ export default function LoginPage() {
 
         if (profileError) throw profileError;
 
-        // NEW: Check if profile doesn't exist
         if (!profile) {
-          setError("Profilingiz topilmadi. Iltimos, administratorga murojaat qiling yoki qaytadan ro'yxatdan o'ting.");
+          setError("Profilingiz topilmadi. Iltimos, administratorga murojaat qiling.");
           setLoading(false);
           return;
         }
 
-        // NEW: Check if approved
+        // Check if selected role matches
+        if (profile.role !== selectedRole && profile.role !== 'admin') {
+           setError(`Siz tanlagan rol o'z profilingizga mos kelmadi. Sizning tizimdagi rolingiz: ${profile.role}`);
+           setLoading(false);
+           return;
+        }
+
+        // Check if approved
         if (profile.role !== 'admin' && !profile.is_approved) {
           await supabase.auth.signOut();
           setError("Hisobingiz admin tomonidan tasdiqlanmagan. Iltimos, kuting.");
@@ -71,8 +73,11 @@ export default function LoginPage() {
           case 'pedagog':
             navigate('/dashboard/pedagog');
             break;
-          case 'rahbariyat':
-            navigate('/dashboard/rahbariyat');
+          case 'operator':
+            navigate('/dashboard/operator');
+            break;
+          case 'approver':
+            navigate('/dashboard/approver');
             break;
           case 'admin':
             navigate('/dashboard/admin');
@@ -121,6 +126,28 @@ export default function LoginPage() {
                 <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
               </div>
             )}
+
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Kirish roli
+              </label>
+              <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <ShieldCheck className="h-5 w-5 text-gray-400" />
+                </div>
+                <select
+                  id="role"
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="appearance-none block w-full pl-10 px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="pedagog">O'qituvchi</option>
+                  <option value="operator">Ma'lumot operatori</option>
+                  <option value="approver">Ma'lumotlarni tasdiqlovchi</option>
+                  <option value="admin">Administrator</option>
+                </select>
+              </div>
+            </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -172,6 +199,8 @@ export default function LoginPage() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">

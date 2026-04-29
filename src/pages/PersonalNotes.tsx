@@ -2,10 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Plus, FileText, Download, Trash2, 
-  Upload, Loader2, StickyNote, X, AlertCircle, Printer
+  Upload, Loader2, StickyNote, X, AlertCircle, Printer,
+  Search, Sparkles, Brain, RefreshCw
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
+import { searchNotesWithAI } from '../services/geminiService';
 
 interface Note {
   id: string;
@@ -19,12 +21,18 @@ interface Note {
 export default function PersonalNotes() {
   const { t } = useLanguage();
   const [notes, setNotes] = useState<Note[]>([]);
+  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [newNote, setNewNote] = useState({ title: '', content: '' });
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Search states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isAISearching, setIsAISearching] = useState(false);
+  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
 
   const fetchNotes = useCallback(async () => {
     try {
@@ -35,6 +43,7 @@ export default function PersonalNotes() {
 
       if (error) throw error;
       setNotes(data || []);
+      setFilteredNotes(data || []);
     } catch (err: any) {
       console.error('Error fetching notes:', err);
       setError(err.message);
@@ -46,6 +55,48 @@ export default function PersonalNotes() {
   useEffect(() => {
     fetchNotes();
   }, [fetchNotes]);
+
+  // Regular search
+  useEffect(() => {
+    if (!searchQuery) {
+      setFilteredNotes(notes);
+      setAiExplanation(null);
+      return;
+    }
+    
+    // Traditional filtering if not using AI
+    if (!isAISearching) {
+      const lowerQuery = searchQuery.toLowerCase();
+      const filtered = notes.filter(n => 
+        n.title.toLowerCase().includes(lowerQuery) || 
+        n.content.toLowerCase().includes(lowerQuery)
+      );
+      setFilteredNotes(filtered);
+    }
+  }, [searchQuery, notes, isAISearching]);
+
+  const handleAISearch = async () => {
+    if (!searchQuery) return;
+    
+    setIsAISearching(true);
+    setError(null);
+    try {
+      const result = await searchNotesWithAI(searchQuery, notes);
+      const filtered = notes.filter(n => result.ids.includes(n.id));
+      setFilteredNotes(filtered);
+      setAiExplanation(result.explanation);
+    } catch (err: any) {
+      setError("AI qidiruvda xatolik: " + err.message);
+    } finally {
+      setIsAISearching(false);
+    }
+  };
+
+  const handleResetSearch = () => {
+    setSearchQuery('');
+    setFilteredNotes(notes);
+    setAiExplanation(null);
+  };
 
   const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,6 +198,56 @@ export default function PersonalNotes() {
             {t('addNote')}
           </button>
         </div>
+      </div>
+
+      {/* SEARCH BARS */}
+      <div className="mb-8 space-y-4">
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Qaydlardan qidirish..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
+            />
+          </div>
+          <button
+            onClick={handleAISearch}
+            disabled={!searchQuery || isAISearching}
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-md"
+          >
+            {isAISearching ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Sparkles className="w-5 h-5" />
+            )}
+            AI bilan izlash
+          </button>
+          {(searchQuery || aiExplanation) && (
+            <button
+              onClick={handleResetSearch}
+              className="p-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+            >
+              <RefreshCw className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+
+        {aiExplanation && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-xl flex gap-3"
+          >
+            <Brain className="w-6 h-6 text-indigo-600 dark:text-indigo-400 shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-indigo-900 dark:text-indigo-100 mb-1">AI Izohi:</p>
+              <p className="text-sm text-indigo-800 dark:text-indigo-300">{aiExplanation}</p>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {error && (
@@ -258,7 +359,7 @@ export default function PersonalNotes() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {notes.map((note) => (
+          {filteredNotes.map((note) => (
             <motion.div
               layout
               key={note.id}
