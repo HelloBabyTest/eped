@@ -147,10 +147,9 @@ export default function RegisterPage() {
                   onChange={(e) => setRole(e.target.value)}
                   className="appearance-none block w-full pl-10 px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:text-white"
                 >
-                  <option value="pedagog">O'qituvchi</option>
-                  <option value="operator">Ma'lumot operatori</option>
-                  <option value="approver">Tasdiqlovchi</option>
-                  <option value="admin">Administrator</option>
+                  <option value="pedagog">O'qituvchi (Pedagog)</option>
+                  <option value="rahbariyat">Rahbariyat</option>
+                  <option value="admin">Administrator (Test uchun)</option>
                 </select>
               </div>
             </div>
