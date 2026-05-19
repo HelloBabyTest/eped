@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { supabase } from '../lib/supabase';
@@ -12,6 +12,38 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        setLoading(true);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+        
+        switch (profile?.role) {
+          case 'admin':
+            navigate('/dashboard/admin');
+            break;
+          case 'rahbariyat':
+            navigate('/dashboard/rahbariyat');
+            break;
+          case 'tahrirlovchi':
+            navigate('/dashboard/tahrirlovchi');
+            break;
+          case 'tasdiqlovchi':
+            navigate('/dashboard/tasdiqlovchi');
+            break;
+          default:
+            navigate('/dashboard/pedagog');
+        }
+      }
+    };
+    checkSession();
+  }, [navigate]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();

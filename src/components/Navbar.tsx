@@ -98,7 +98,7 @@ export default function Navbar() {
             <LanguageSwitcher />
             <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-1 hidden sm:block" />
             
-            {session || isDashboard ? (
+            {isDashboard ? (
               <>
                 <button 
                   onClick={handleLogout}

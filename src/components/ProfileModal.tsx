@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, User, Phone, Mail, Building, GraduationCap, Briefcase, Info, CheckCircle2, LogOut } from 'lucide-react';
+import { X, User, Phone, Mail, Building, GraduationCap, Briefcase, Info, CheckCircle2, LogOut, Laptop } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import ConfirmModal from './ConfirmModal';
@@ -220,6 +220,56 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     />
                   </div>
 
+                </div>
+
+                {/* Devices & Sessions Section */}
+                <div className="bg-white border border-gray-200 rounded-xl p-5">
+                   <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Qurilmalar va Sessiyalar</h3>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-3 bg-indigo-50 border border-indigo-100 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                          <Laptop className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-gray-900">Joriy qurilma</div>
+                          <div className="text-xs text-gray-500">
+                            {(() => {
+                              const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+                              const browser = ua.includes('Chrome') ? 'Chrome' : ua.includes('Firefox') ? 'Firefox' : ua.includes('Safari') ? 'Safari' : 'Browser';
+                              const os = ua.includes('Windows') ? 'Windows' : ua.includes('Mac') ? 'MacOS' : ua.includes('Linux') ? 'Linux' : 'Qurilma';
+                              return `${os} • ${browser}`;
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-xs font-bold text-indigo-600 px-2 py-1 bg-indigo-100 rounded-md">
+                        Faol
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-600">
+                        Boshqa qurilmalardagi sessiyalarni yopish
+                      </div>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await supabase.auth.signOut({ scope: 'others' });
+                            alert("Boshqa barcha qurilmalardan chiqildi.");
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }}
+                        className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                      >
+                        Barchasini tugatish
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
               </div>
