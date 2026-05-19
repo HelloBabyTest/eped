@@ -16,13 +16,13 @@ export default function Footer() {
           </div>
           
           <div className="flex gap-8 text-sm text-gray-500 dark:text-gray-400">
-            <a href="#" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{t('footerAbout')}</a>
-            <a href="#" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{t('footerHelp')}</a>
-            <a href="#" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{t('footerPrivacy')}</a>
+            <a href="#" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{t('aboutUsFooter')}</a>
+            <a href="#" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{t('helpFooter')}</a>
+            <a href="#" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{t('privacyPolicy')}</a>
           </div>
           
           <div className="text-sm text-gray-400 dark:text-gray-500">
-            {t('footerCopyright')}
+            {t('rightsReserved')}
           </div>
         </div>
       </div>

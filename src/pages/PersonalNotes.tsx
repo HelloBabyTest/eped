@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Plus, FileText, Download, Trash2, 
-  Upload, Loader2, StickyNote, X, AlertCircle, Printer,
-  Search, Sparkles, Brain, RefreshCw
+  Upload, Loader2, StickyNote, X, AlertCircle,
+  MessageSquare, Sparkles, Send, Bot, User,
+  Eye, EyeOff, Lock
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
-import { searchNotesWithAI } from '../services/geminiService';
+import { GoogleGenAI } from '@google/genai';
 
 interface Note {
   id: string;
@@ -18,85 +19,114 @@ interface Note {
   created_at: string;
 }
 
-export default function PersonalNotes() {
+export default function PersonalNotes({ adminUserId }: { adminUserId?: string }) {
   const { t } = useLanguage();
   const [notes, setNotes] = useState<Note[]>([]);
-  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
+  const [isVisibleToEditor, setIsVisibleToEditor] = useState(true);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [newNote, setNewNote] = useState({ title: '', content: '' });
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // Search states
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isAISearching, setIsAISearching] = useState(false);
-  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
+
+  // Chat states
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'model', text: string }[]>([]);
+  const [chatQuery, setChatQuery] = useState('');
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatMessages, isChatLoading]);
+
+  const handleAskAI = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatQuery.trim()) return;
+
+    const userQuery = chatQuery.trim();
+    setChatMessages(prev => [...prev, { role: 'user', text: userQuery }]);
+    setChatQuery('');
+    setIsChatLoading(true);
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      
+      const notesContext = notes.map(n => 
+        `Sarlavha: ${n.title}\nMazmuni: ${n.content}\nSana: ${new Date(n.created_at).toLocaleDateString()}`
+      ).join('\n\n---\n\n');
+
+      const systemInstruction = "Siz pedagogning shaxsiy yordamchisisiz. Sizning vazifangiz uning shaxsiy qaydnomalaridan ma'lumotlarni izlash va savollariga javob berish. " +
+        "Faqat quyida keltirilgan qaydlardagi ma'lumotlarga asoslanib javob bering. Agar javob qaydlarda bo'lmasa, uni olib qochmasdan to'g'ridan-to'g'ri 'Bu ma'lumot qaydlaringizda topilmadi' deb ayting. Doimo o'zbek tilida javob bering.\n\n" +
+        "QAYDNOMALAR:\n" + (notesContext || "Hozircha qaydnomalar mavjud emas.");
+
+      // Prepare previous messages for context
+      const contents = [
+        ...chatMessages.map(msg => `${msg.role === 'user' ? 'Foydalanuvchi' : 'Model'}: ${msg.text}`),
+        `Foydalanuvchi: ${userQuery}`
+      ].join('\n\n');
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: contents,
+        config: {
+          systemInstruction,
+          temperature: 0.3,
+        }
+      });
+
+      setChatMessages(prev => [...prev, { role: 'model', text: response.text || 'Kechirasiz, javob topilmadi.' }]);
+    } catch (err: any) {
+      console.error("AI Error:", err);
+      setChatMessages(prev => [...prev, { role: 'model', text: "Kechirasiz, xatolik yuz berdi. Tugatamiz va qayta urinib ko'ring." }]);
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
 
   const fetchNotes = useCallback(async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const targetUserId = adminUserId || user.id;
+
       const { data, error } = await supabase
         .from('personal_notes')
         .select('*')
+        .eq('user_id', targetUserId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setNotes(data || []);
-      setFilteredNotes(data || []);
+      
+      const settingsNote = (data || []).find(n => n.title === 'SYSTEM_SETTINGS');
+      if (settingsNote) {
+        try {
+          const settings = JSON.parse(settingsNote.content);
+          setIsVisibleToEditor(settings.visibleToEditor !== false);
+        } catch (e) {
+          setIsVisibleToEditor(true);
+        }
+      } else {
+        setIsVisibleToEditor(true);
+      }
+
+      setNotes((data || []).filter(n => n.title !== 'SYSTEM_SETTINGS'));
     } catch (err: any) {
       console.error('Error fetching notes:', err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [adminUserId]);
 
   useEffect(() => {
     fetchNotes();
   }, [fetchNotes]);
-
-  // Regular search
-  useEffect(() => {
-    if (!searchQuery) {
-      setFilteredNotes(notes);
-      setAiExplanation(null);
-      return;
-    }
-    
-    // Traditional filtering if not using AI
-    if (!isAISearching) {
-      const lowerQuery = searchQuery.toLowerCase();
-      const filtered = notes.filter(n => 
-        n.title.toLowerCase().includes(lowerQuery) || 
-        n.content.toLowerCase().includes(lowerQuery)
-      );
-      setFilteredNotes(filtered);
-    }
-  }, [searchQuery, notes, isAISearching]);
-
-  const handleAISearch = async () => {
-    if (!searchQuery) return;
-    
-    setIsAISearching(true);
-    setError(null);
-    try {
-      const result = await searchNotesWithAI(searchQuery, notes);
-      const filtered = notes.filter(n => result.ids.includes(n.id));
-      setFilteredNotes(filtered);
-      setAiExplanation(result.explanation);
-    } catch (err: any) {
-      setError("AI qidiruvda xatolik: " + err.message);
-    } finally {
-      setIsAISearching(false);
-    }
-  };
-
-  const handleResetSearch = () => {
-    setSearchQuery('');
-    setFilteredNotes(notes);
-    setAiExplanation(null);
-  };
 
   const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,12 +137,14 @@ export default function PersonalNotes() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      const targetUserId = adminUserId || user.id;
+
       let fileUrl = '';
       let fileName = '';
 
       if (file) {
         const fileExt = file.name.split('.').pop();
-        const filePath = `${user.id}/${Math.random()}.${fileExt}`;
+        const filePath = `${targetUserId}/${Math.random()}.${fileExt}`;
         fileName = file.name;
 
         const { error: uploadError } = await supabase.storage
@@ -131,14 +163,30 @@ export default function PersonalNotes() {
       const { error: insertError } = await supabase
         .from('personal_notes')
         .insert({
-          user_id: user.id,
+          user_id: targetUserId,
           title: newNote.title,
           content: newNote.content,
           file_url: fileUrl,
           file_name: fileName,
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        if (insertError.message.includes('file_name')) {
+          console.warn("Retrying without file_name column due to schema cache error");
+          const { error: retryError } = await supabase
+            .from('personal_notes')
+            .insert({
+              user_id: targetUserId,
+              title: newNote.title,
+              content: newNote.content,
+              file_url: fileUrl,
+            });
+          
+          if (retryError) throw retryError;
+        } else {
+          throw insertError;
+        }
+      }
 
       setNewNote({ title: '', content: '' });
       setFile(null);
@@ -175,235 +223,353 @@ export default function PersonalNotes() {
     }
   };
 
+  const toggleVisibility = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const newValue = !isVisibleToEditor;
+      
+      // Find existing settings note
+      const { data: existing } = await supabase
+        .from('personal_notes')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('title', 'SYSTEM_SETTINGS')
+        .maybeSingle();
+
+      if (existing) {
+        const { error: updateError } = await supabase
+          .from('personal_notes')
+          .update({ content: JSON.stringify({ visibleToEditor: newValue }) })
+          .eq('id', existing.id);
+        if (updateError) throw updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('personal_notes')
+          .insert({
+            user_id: user.id,
+            title: 'SYSTEM_SETTINGS',
+            content: JSON.stringify({ visibleToEditor: newValue })
+          });
+        if (insertError) throw insertError;
+      }
+      
+      setIsVisibleToEditor(newValue);
+    } catch (err: any) {
+      console.error('Error toggling visibility:', err);
+    }
+  };
+
+  const isEditor = !!adminUserId;
+
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('personalNotes')}</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">O'zingiz uchun muhim qaydlarni saqlang.</p>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-gray-900">{t('personalNotes')}</h1>
+            {!isEditor && (
+              <button
+                onClick={toggleVisibility}
+                title={isVisibleToEditor ? "Tahrirlovchiga ko'rinadigan" : "Tahrirlovchidan yashirilgan"}
+                className={`p-2 rounded-xl border transition-all flex items-center gap-2 text-sm font-medium ${
+                  isVisibleToEditor 
+                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100' 
+                    : 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100'
+                }`}
+              >
+                {isVisibleToEditor ? (
+                  <>
+                    <Eye className="w-4 h-4" />
+                    Tahrirlovchiga ko'rinadi
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="w-4 h-4" />
+                    Tahrirlovchidan yashirilgan
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+          <p className="text-gray-500 mt-1">O'zingiz uchun muhim qaydlarni saqlang.</p>
         </div>
-        <div className="flex items-center gap-3 print-hidden">
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm"
-          >
-            <Printer className="w-5 h-5" />
-            Chop qilish
-          </button>
+        {!isEditor && (
           <button
             onClick={() => setIsAdding(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 dark:shadow-none"
+            className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
           >
             <Plus className="w-5 h-5" />
             {t('addNote')}
           </button>
-        </div>
-      </div>
-
-      {/* SEARCH BARS */}
-      <div className="mb-8 space-y-4">
-        <div className="flex flex-col md:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Qaydlardan qidirish..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
-            />
-          </div>
-          <button
-            onClick={handleAISearch}
-            disabled={!searchQuery || isAISearching}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-md"
-          >
-            {isAISearching ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Sparkles className="w-5 h-5" />
-            )}
-            AI bilan izlash
-          </button>
-          {(searchQuery || aiExplanation) && (
-            <button
-              onClick={handleResetSearch}
-              className="p-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
-            >
-              <RefreshCw className="w-5 h-5" />
-            </button>
-          )}
-        </div>
-
-        {aiExplanation && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-xl flex gap-3"
-          >
-            <Brain className="w-6 h-6 text-indigo-600 dark:text-indigo-400 shrink-0" />
-            <div>
-              <p className="text-sm font-bold text-indigo-900 dark:text-indigo-100 mb-1">AI Izohi:</p>
-              <p className="text-sm text-indigo-800 dark:text-indigo-300">{aiExplanation}</p>
-            </div>
-          </motion.div>
         )}
       </div>
 
-      {error && (
-        <div className="mb-6 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-400 p-4 flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-400" />
-          <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+      {isEditor && !isVisibleToEditor ? (
+        <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+          <Lock className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Qaydnomalar yashirilgan</h3>
+          <p className="text-gray-500">Ushbu foydalanuvchi o'zining shaxsiy qaydnomalarini tahrirlovchilardan yashirib qo'ygan.</p>
         </div>
+      ) : (
+        <>
+          {error && (
+            <div className="mb-6 bg-red-50 border-l-4 border-red-400 p-4 flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400" />
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
+
+          {/* Add Note Modal */}
+          <AnimatePresence>
+            {isAdding && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                  onClick={() => setIsAdding(false)}
+                >
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                    className="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-8"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-2xl font-bold text-gray-900">{t('addNote')}</h2>
+                      <button onClick={() => setIsAdding(false)} className="p-2 text-gray-400 hover:text-gray-600">
+                        <X className="w-6 h-6" />
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleAddNote} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('title')}</label>
+                        <input
+                          required
+                          value={newNote.title}
+                          onChange={e => setNewNote({ ...newNote, title: e.target.value })}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                          placeholder="Qayd sarlavhasi..."
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('content')}</label>
+                        <textarea
+                          rows={4}
+                          value={newNote.content}
+                          onChange={e => setNewNote({ ...newNote, content: e.target.value })}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all resize-none"
+                          placeholder="Qayd mazmuni..."
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('file')}</label>
+                        <div className="relative">
+                          <input
+                            type="file"
+                            onChange={e => setFile(e.target.files?.[0] || null)}
+                            className="hidden"
+                            id="file-upload"
+                          />
+                          <label
+                            htmlFor="file-upload"
+                            className="flex items-center justify-center gap-2 w-full px-4 py-4 border-2 border-gray-100 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer transition-all group bg-gray-50/50"
+                          >
+                            <Upload className="w-5 h-5 text-gray-400 group-hover:text-indigo-500" />
+                            <span className="text-sm text-gray-500 group-hover:text-indigo-600">
+                              {file ? file.name : 'Faylni tanlang (PDF, Word, Rasm...)'}
+                            </span>
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 pt-4">
+                        <button
+                          type="button"
+                          onClick={() => setIsAdding(false)}
+                          className="flex-1 px-6 py-3 border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-all"
+                        >
+                          {t('cancel')}
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={uploading}
+                          className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('save')}
+                        </button>
+                      </div>
+                    </form>
+                  </motion.div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+
+          {/* Notes Grid */}
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+            </div>
+          ) : notes.length === 0 ? (
+            <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
+              <StickyNote className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">{t('noNotes')}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {notes.map((note) => (
+                <motion.div
+                  layout
+                  key={note.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all group flex flex-col h-full"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="p-2 bg-indigo-50 rounded-lg">
+                      <FileText className="w-6 h-6 text-indigo-600" />
+                    </div>
+                    <button
+                      onClick={() => handleDelete(note.id, note.file_url)}
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1">{note.title}</h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 leading-relaxed flex-grow whitespace-pre-wrap overflow-y-auto max-h-[300px] pr-2 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700">
+                    {note.content}
+                  </p>
+                  
+                  <div className="mt-auto">
+                    {note.file_url && (
+                      <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-50">
+                        <div className="flex items-center gap-2 text-sm text-gray-500 max-w-[150px]">
+                          <Download className="w-4 h-4 flex-shrink-0" />
+                          <span className="truncate">{note.file_name}</span>
+                        </div>
+                        <a
+                          href={note.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-bold text-indigo-600 hover:text-indigo-700 whitespace-nowrap ml-2"
+                        >
+                          {t('download')}
+                        </a>
+                      </div>
+                    )}
+                    
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">
+                      {new Date(note.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
-      {/* Add Note Modal */}
-      <AnimatePresence>
-        {isAdding && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-              onClick={() => setIsAdding(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-2xl shadow-2xl p-8"
-                onClick={e => e.stopPropagation()}
+      {/* AI Chat Floating Button */}
+      {(!isEditor || isVisibleToEditor) && (
+        <>
+          <AnimatePresence>
+            {!chatOpen && (
+              <motion.button
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                onClick={() => setChatOpen(true)}
+                className="fixed bottom-6 right-6 p-4 bg-indigo-600 text-white rounded-full shadow-2xl hover:bg-indigo-700 transition-all z-40 group flex items-center justify-center"
               >
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('addNote')}</h2>
-                  <button onClick={() => setIsAdding(false)} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                    <X className="w-6 h-6" />
+                <Sparkles className="w-6 h-6 group-hover:animate-pulse" />
+              </motion.button>
+            )}
+          </AnimatePresence>
+
+          {/* AI Chat Panel */}
+          <AnimatePresence>
+            {chatOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 50, scale: 0.95 }}
+                className="fixed bottom-6 right-6 w-[380px] max-w-[calc(100vw-3rem)] h-[550px] max-h-[calc(100vh-6rem)] bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 flex flex-col overflow-hidden"
+              >
+                {/* Header */}
+                <div className="p-4 bg-indigo-600 text-white flex items-center justify-between shadow-sm z-10">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-indigo-200" />
+                    <h3 className="font-bold">AI Yordamchi</h3>
+                  </div>
+                  <button onClick={() => setChatOpen(false)} className="text-white hover:bg-white/20 p-1.5 rounded-lg transition-all">
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
 
-                <form onSubmit={handleAddNote} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('title')}</label>
-                    <input
-                      required
-                      value={newNote.title}
-                      onChange={e => setNewNote({ ...newNote, title: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all dark:bg-gray-700 dark:text-white"
-                      placeholder="Qayd sarlavhasi..."
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('content')}</label>
-                    <textarea
-                      rows={4}
-                      value={newNote.content}
-                      onChange={e => setNewNote({ ...newNote, content: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all resize-none dark:bg-gray-700 dark:text-white"
-                      placeholder="Qayd mazmuni..."
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('file')}</label>
-                    <div className="relative">
-                      <input
-                        type="file"
-                        onChange={e => setFile(e.target.files?.[0] || null)}
-                        className="hidden"
-                        id="file-upload"
-                      />
-                      <label
-                        htmlFor="file-upload"
-                        className="flex items-center justify-center gap-2 w-full px-4 py-4 border-2 border-gray-100 dark:border-gray-600 rounded-xl hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer transition-all group bg-gray-50/50 dark:bg-gray-700/50"
-                      >
-                        <Upload className="w-5 h-5 text-gray-400 group-hover:text-indigo-500 dark:group-hover:text-indigo-400" />
-                        <span className="text-sm text-gray-500 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                          {file ? file.name : 'Faylni tanlang (PDF, Word, Rasm...)'}
-                        </span>
-                      </label>
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-4">
+                  {chatMessages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 gap-3">
+                      <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                        <Bot className="w-6 h-6 text-indigo-600" />
+                      </div>
+                      <p className="text-sm">Assalomu alaykum! Qaydnomalaringizdan nimani topib berishim mumkin?</p>
                     </div>
-                  </div>
+                  ) : (
+                    chatMessages.map((msg, idx) => (
+                      <div key={idx} className={`flex items-start gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user' ? 'bg-indigo-100' : 'bg-white border border-gray-200 shadow-sm'}`}>
+                          {msg.role === 'user' ? <User className="w-4 h-4 text-indigo-600" /> : <Bot className="w-4 h-4 text-indigo-600" />}
+                        </div>
+                        <div className={`p-3 rounded-2xl text-sm ${msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white border border-gray-200 shadow-sm rounded-tl-none text-gray-800'}`}>
+                          <p className="whitespace-pre-wrap">{msg.text}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  {isChatLoading && (
+                    <div className="flex items-start gap-2">
+                      <div className="w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center shrink-0">
+                        <Bot className="w-4 h-4 text-indigo-600" />
+                      </div>
+                      <div className="p-4 rounded-2xl bg-white border border-gray-200 shadow-sm rounded-tl-none text-gray-800 w-16 flex items-center justify-center h-[46px]">
+                        <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
+                      </div>
+                    </div>
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
 
-                  <div className="flex gap-3 pt-4">
-                    <button
-                      type="button"
-                      onClick={() => setIsAdding(false)}
-                      className="flex-1 px-6 py-3 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
-                    >
-                      {t('cancel')}
-                    </button>
+                {/* Input Form */}
+                <form onSubmit={handleAskAI} className="p-3 bg-white border-t border-gray-100 mb-0 shadow-[0_-4px_6px_-6px_rgba(0,0,0,0.1)]">
+                  <div className="relative flex items-center">
+                    <input
+                      type="text"
+                      value={chatQuery}
+                      onChange={(e) => setChatQuery(e.target.value)}
+                      placeholder="Qaydlardan qidirish..."
+                      className="w-full pl-4 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"
+                    />
                     <button
                       type="submit"
-                      disabled={uploading}
-                      className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      disabled={!chatQuery.trim() || isChatLoading}
+                      className="absolute right-2 p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
-                      {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('save')}
+                      <Send className="w-4 h-4" />
                     </button>
                   </div>
                 </form>
               </motion.div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Notes Grid */}
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
-        </div>
-      ) : notes.length === 0 ? (
-        <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-          <StickyNote className="w-16 h-16 text-gray-200 dark:text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400 text-lg">{t('noNotes')}</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredNotes.map((note) => (
-            <motion.div
-              layout
-              key={note.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all group"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
-                  <FileText className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-                </div>
-                <button
-                  onClick={() => handleDelete(note.id, note.file_url)}
-                  className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{note.title}</h3>
-              <div className="text-gray-600 dark:text-gray-300 text-sm mb-6 leading-relaxed whitespace-pre-wrap max-h-64 overflow-y-auto pr-2">
-                {note.content}
-              </div>
-              
-              {note.file_url && (
-                <div className="flex items-center justify-between pt-4 border-t border-gray-50 dark:border-gray-700">
-                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 max-w-[150px]">
-                    <Download className="w-4 h-4 flex-shrink-0" />
-                    <span className="truncate">{note.file_name}</span>
-                  </div>
-                  <a
-                    href={`${note.file_url}?download=`}
-                    className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
-                  >
-                    {t('download')}
-                  </a>
-                </div>
-              )}
-              
-              <div className="mt-4 text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider font-semibold">
-                {new Date(note.created_at).toLocaleDateString()}
-              </div>
-            </motion.div>
-          ))}
-        </div>
+            )}
+          </AnimatePresence>
+        </>
       )}
     </div>
   );

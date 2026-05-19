@@ -3,49 +3,54 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @media print {
-  .print-hidden {
-    display: none !important;
-  }
-  body, main {
-    background-color: white !important;
-    color: black !important;
-  }
-  .print-content {
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-  
-  /* Make tables responsive for printing on A4 */
-  .overflow-x-auto {
-    overflow: visible !important;
-  }
-  table {
-    min-width: 100% !important;
-    width: 100% !important;
-    max-width: 100vw !important;
-    font-size: 10px !important;
-    page-break-inside: auto;
-  }
-  tr {
-    page-break-inside: avoid;
-    page-break-after: auto;
-  }
-  td, th {
-    white-space: normal !important;
-    word-break: break-word !important;
-    padding: 4px !important;
-  }
-  input, textarea {
-    font-size: 10px !important;
-    text-align: center;
+  @page {
+    size: landscape;
+    margin: 1cm;
   }
 
-  /* Ensure background colors and shadows print correctly if needed, or remove them */
-  * {
+  body {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    box-shadow: none !important;
+    background: white !important;
+  }
+
+  /* Make containers overflow visible */
+  .overflow-x-auto, .overflow-y-auto, .overflow-hidden, .overflow-x-hidden {
+    overflow: visible !important;
+  }
+
+  /* Remove any set heights for printing */
+  .h-full, .min-h-screen, .h-screen {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  /* Expand tables */
+  table {
+    width: 100% !important;
+    max-width: none !important;
+    white-space: pre-wrap !important; /* Keep line breaks but wrap text */
+    word-break: break-all !important;
+  }
+
+  /* Force table layouts and borders to be visible */
+  th, td {
+    padding: 0.25rem !important; /* Smaller padding */
+    border: 1px solid #e5e7eb !important; /* Gray-200 */
+    font-size: 8pt !important;
+    vertical-align: top;
+  }
+
+  /* Adjust textarea display to auto-expand for print */
+  textarea {
+    min-height: unset !important;
+    height: auto !important;
+    overflow: visible !important;
+    white-space: pre-wrap !important;
+  }
+
+  /* Specific handling for printing to avoid page breaks mid-row */
+  tr {
+    page-break-inside: avoid;
   }
 }
