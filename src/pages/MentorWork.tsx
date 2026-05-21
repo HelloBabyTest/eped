@@ -58,10 +58,12 @@ export default function MentorWork({ adminUserId, isTasdiqlovchi }: { adminUserI
 
   const fetchData = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      
-      const targetUserId = adminUserId || user.id;
+      let targetUserId = adminUserId;
+      if (!targetUserId) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) return;
+        targetUserId = session.user.id;
+      }
 
       const { data, error } = await supabase
         .from('mentor_works')
@@ -534,16 +536,18 @@ export default function MentorWork({ adminUserId, isTasdiqlovchi }: { adminUserI
                         <div className="w-full min-h-[40px] px-3 py-2 flex items-center justify-between gap-2 text-gray-700 text-sm whitespace-pre-wrap">
                           <span>{typeof cell === 'string' ? cell : cell.text}</span>
                           {typeof cell === 'object' && cell !== null && cell.file_url && (
-                            <a 
-                              href={cell.file_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
+                            <button 
+                              onClick={async (e) => {
+                                e.preventDefault();
+                                const { handleFileDownload } = await import('../lib/downloadHelper');
+                                handleFileDownload(cell.file_url as string, cell.file_name);
+                              }}
                               className="flex items-center gap-1 px-2 py-1 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition-all text-xs font-medium"
                             >
                               <FileText className="w-3 h-3" />
                               Fayl
                               <ExternalLink className="w-3 h-3" />
-                            </a>
+                            </button>
                           )}
                         </div>
                       )}

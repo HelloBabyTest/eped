@@ -226,7 +226,6 @@ export default function RegisterPage() {
                   <option value="rahbariyat">Rahbariyat</option>
                   <option value="tahrirlovchi">Tahrirlovchi</option>
                   <option value="tasdiqlovchi">Tasdiqlovchi</option>
-                  <option value="admin">Administrator (Test uchun)</option>
                 </select>
               </div>
             </div>

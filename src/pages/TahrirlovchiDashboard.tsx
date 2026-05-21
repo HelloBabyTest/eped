@@ -74,7 +74,7 @@ const mockTasks: EditTask[] = [
 export default function TahrirlovchiDashboard() {
   const [tasks, setTasks] = useState<EditTask[]>(mockTasks);
   const [teachers, setTeachers] = useState<Profile[]>([]);
-  const [activeView, setActiveView] = useState<'tasks' | 'teachers' | 'teacher_details' | 'groups'>('tasks');
+  const [activeView, setActiveView] = useState<'tasks' | 'teachers' | 'teacher_details' | 'groups' | 'distribution'>('tasks');
   const [selectedTeacherProfile, setSelectedTeacherProfile] = useState<Profile | null>(null);
   const [teacherFilter, setTeacherFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -293,6 +293,16 @@ export default function TahrirlovchiDashboard() {
             }`}
           >
             <Users className="w-4 h-4" /> Guruhlar
+          </button>
+          <button 
+            onClick={() => setActiveView('distribution')}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              activeView === 'distribution' 
+                ? 'bg-white text-indigo-600 shadow-sm' 
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <FileText className="w-4 h-4" /> Taqsimot (O'quv ishlari)
           </button>
           
           <div className="h-8 w-px bg-gray-200 mx-2 self-center" />
@@ -729,6 +739,22 @@ export default function TahrirlovchiDashboard() {
                 ))}
               </div>
             )}
+          </div>
+        </motion.div>
+      ) : activeView === 'distribution' ? (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8"
+        >
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">O'quv ishlari majmuasi va Taqsimot</h2>
+              <p className="text-gray-500 mt-1">Ushbu jadval orqali darslarni ro'yxatdan o'tgan o'qituvchilarga biriktirishingiz mumkin.</p>
+            </div>
+          </div>
+          <div className="border border-gray-200 rounded-2xl p-6 bg-gray-50/30">
+            <AcademicWork isDistributor={true} adminUserId={undefined} />
           </div>
         </motion.div>
       ) : null}

@@ -19,6 +19,7 @@ import Norms from './pages/Norms';
 import { isSupabaseConfigured } from './lib/supabase';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import UserChat from './pages/UserChat';
 
 import TahrirlovchiDashboard from './pages/TahrirlovchiDashboard';
 import TasdiqlovchiDashboard from './pages/TasdiqlovchiDashboard';
@@ -68,11 +69,13 @@ export default function App() {
             <Route path="/dashboard/pedagog/master-apprentice" element={<DashboardLayout><MentorWork /></DashboardLayout>} />
             <Route path="/dashboard/pedagog/annual" element={<DashboardLayout><YearlyWork /></DashboardLayout>} />
             <Route path="/dashboard/pedagog/norms" element={<DashboardLayout><Norms /></DashboardLayout>} />
+            <Route path="/dashboard/pedagog/chat" element={<DashboardLayout><UserChat /></DashboardLayout>} />
             
             <Route path="/dashboard/rahbariyat" element={<><Navbar /><RahbariyatDashboard /></>} />
             <Route path="/dashboard/tahrirlovchi" element={<><Navbar /><TahrirlovchiDashboard /></>} />
             <Route path="/dashboard/tasdiqlovchi" element={<><Navbar /><TasdiqlovchiDashboard /></>} />
             <Route path="/dashboard/admin" element={<><Navbar /><AdminDashboardPage /></>} />
+            <Route path="/dashboard/chat" element={<><Navbar /><UserChat /></>} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

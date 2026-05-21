@@ -76,10 +76,12 @@ export default function ScientificWork({ adminUserId, isTasdiqlovchi }: { adminU
 
   const fetchData = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      
-      const targetUserId = adminUserId || user.id;
+      let targetUserId = adminUserId;
+      if (!targetUserId) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) return;
+        targetUserId = session.user.id;
+      }
 
       const { data, error } = await supabase
         .from('scientific_works')
@@ -652,9 +654,17 @@ export default function ScientificWork({ adminUserId, isTasdiqlovchi }: { adminU
                                     <div className="flex flex-col gap-1 mt-1">
                                       {cell.items.map(item => (
                                         <div key={item.id} className="flex items-center justify-between bg-gray-50 p-1.5 rounded border border-gray-100 group/item">
-                                           <a href={item.file_url} target="_blank" rel="noreferrer" className="text-xs text-indigo-600 hover:underline truncate max-w-[120px]" title={item.topic}>
+                                           <button 
+                                             onClick={async (e) => {
+                                               e.preventDefault();
+                                               const { handleFileDownload } = await import('../lib/downloadHelper');
+                                               handleFileDownload(item.file_url, item.topic || 'Fayl');
+                                             }}
+                                             className="text-xs text-indigo-600 hover:underline truncate max-w-[120px]" 
+                                             title={item.topic}
+                                           >
                                              {item.topic || 'Fayl'}
-                                           </a>
+                                           </button>
                                            {(adminUserId || allowedCells[`${rowIndex + 2}_${colIndex}`]) && (
                                              <button onClick={() => handleDeleteItem(rowIndex + 2, colIndex, item.id, item.file_url)} className="text-red-400 hover:text-red-600 opacity-0 group-hover/item:opacity-100 transition">
                                                 <X className="w-3 h-3" />
@@ -677,9 +687,17 @@ export default function ScientificWork({ adminUserId, isTasdiqlovchi }: { adminU
                                  {typeof cell === 'object' && 'type' in cell && cell.type === 'uploads' && (
                                     <div className="flex flex-col gap-1 mt-1">
                                       {cell.items.map(item => (
-                                        <a key={item.id} href={item.file_url} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-indigo-600 hover:underline bg-indigo-50/50 p-1 rounded">
+                                        <button 
+                                          key={item.id} 
+                                          onClick={async (e) => {
+                                            e.preventDefault();
+                                            const { handleFileDownload } = await import('../lib/downloadHelper');
+                                            handleFileDownload(item.file_url, item.topic || 'Fayl');
+                                          }}
+                                          className="flex items-center gap-1 text-xs text-indigo-600 hover:underline bg-indigo-50/50 p-1 rounded text-left"
+                                        >
                                            <FileText className="w-3 h-3" /> {item.topic || 'Fayl'}
-                                        </a>
+                                        </button>
                                       ))}
                                     </div>
                                  )}

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { BookOpen, LogIn, UserPlus, LogOut, User, Sun, Moon } from 'lucide-react';
+import { BookOpen, LogIn, UserPlus, LogOut, User, Sun, Moon, MessageCircle } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import ProfileModal from './ProfileModal';
+import UserChat from '../pages/UserChat';
 
 import ConfirmModal from './ConfirmModal';
 
@@ -14,6 +15,7 @@ export default function Navbar() {
   const [profile, setProfile] = useState<any>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
@@ -100,6 +102,15 @@ export default function Navbar() {
             
             {isDashboard ? (
               <>
+                {(profile?.role === 'tasdiqlovchi' || profile?.role === 'tahrirlovchi') && (
+                  <button
+                    onClick={() => setIsChatOpen(!isChatOpen)}
+                    className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors ${isChatOpen ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'}`}
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    <span className="hidden xs:inline">Chat</span>
+                  </button>
+                )}
                 <button 
                   onClick={handleLogout}
                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
@@ -147,6 +158,9 @@ export default function Navbar() {
         title={t('confirmLogoutTitle')}
         message={t('confirmLogoutMsg')}
       />
+      {isChatOpen && (
+        <UserChat isPopup={true} onClose={() => setIsChatOpen(false)} />
+      )}
     </nav>
   );
 }

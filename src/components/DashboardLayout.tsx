@@ -6,7 +6,7 @@ import {
   LayoutDashboard, StickyNote, User, 
   GraduationCap, Library, FlaskConical, 
   Users, Award, Scale, Sun, Moon, Loader2,
-  AlertCircle
+  AlertCircle, MessageCircle
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -100,6 +100,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { to: '/dashboard/pedagog/master-apprentice', icon: Users, label: t('masterApprentice') },
     { to: '/dashboard/pedagog/annual', icon: Award, label: t('annualWork') },
     { to: '/dashboard/pedagog/norms', icon: Scale, label: t('norms') },
+    { to: '/dashboard/pedagog/chat', icon: MessageCircle, label: 'Chat' },
   ];
 
   return (

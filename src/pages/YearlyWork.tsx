@@ -12,12 +12,7 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend
 } from 'recharts';
 
-const summaryData = [
-  { id: 1, label: "O'quv yuklama", plan: 850, actual: 420 },
-  { id: 2, label: "O'quv-uslubiy ishlar", plan: 150, actual: 120 },
-  { id: 3, label: "Ilmiy-tadqiqot ishlari", plan: 200, actual: 150 },
-  { id: 4, label: "Ustoz-shogird ishlari", plan: 100, actual: 80 },
-];
+
 
 const detailedTasks = [
   { id: 1, type: "O'quv", title: "Ma'ruza darslari o'tish", hours: 180, date: "Sentabr - Dekabr", status: "Bajarildi" },
@@ -29,21 +24,82 @@ const detailedTasks = [
 
 export default function YearlyWork({ adminUserId, isTasdiqlovchi }: { adminUserId?: string, isTasdiqlovchi?: boolean }) {
   const [activeTab, setActiveTab] = useState<'overview' | 'detailed'>('overview');
+  const [stats, setStats] = useState({
+    academic: { id: 1, label: "O'quv yuklama", plan: 521, actual: 0 },
+    methodical: { id: 2, label: "O'quv-uslubiy ishlar", plan: 1, actual: 0 },
+    scientific: { id: 3, label: "Ilmiy-tadqiqot ishlari", plan: 3, actual: 0 },
+    mentor: { id: 4, label: "Ustoz-shogird ishlari", plan: 2, actual: 0 },
+  });
 
   const [isApproved, setIsApproved] = useState(false);
+  
+  const percentCalc = (actual: number, plan: number) => {
+    if (!plan) return 0;
+    return Math.min(100, Math.round((actual / plan) * 100));
+  };
+
+  const [kafedraXulosa, setKafedraXulosa] = useState('');
+  const [fakultetQarori, setFakultetQarori] = useState('');
+  const [canTeacherEditComments, setCanTeacherEditComments] = useState(false);
+  const [sessionUserId, setSessionUserId] = useState<string | null>(null);
+
   useEffect(() => {
-    const fetchAppr = async () => {
+    const fetchData = async () => {
       let uid = adminUserId;
       if (!uid) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) uid = user.id;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+           uid = session.user.id;
+           setSessionUserId(session.user.id);
+        }
       }
       if (uid) {
         setIsApproved(localStorage.getItem('approved_yearly_' + uid) === 'true');
+        setKafedraXulosa(localStorage.getItem('kafedra_xulosa_' + uid) || '');
+        setFakultetQarori(localStorage.getItem('fakultet_qarori_' + uid) || '');
+        setCanTeacherEditComments(localStorage.getItem('edit_comments_' + uid) === 'true');
+        
+        // Fetch academic works (calculate completed tasks or hours)
+        const { data: ac } = await supabase.from('academic_works').select('table_data').eq('user_id', uid).maybeSingle();
+        let acCount = 0;
+        if (ac?.table_data) {
+           const td = Array.isArray(ac.table_data) ? ac.table_data : [...(ac.table_data.kuzgi || []), ...(ac.table_data.bahorgi || [])];
+           acCount = td.filter(r => r[1]?.trim() !== '').length; // count non-empty rows
+        }
+
+        const { data: me } = await supabase.from('methodical_works').select('table_data').eq('user_id', uid).maybeSingle();
+        let meCount = 0;
+        if (me?.table_data) {
+           const td = me.table_data;
+           meCount = td.filter((r: string[]) => r[1]?.trim() !== '').length;
+        }
+
+        const { data: sc } = await supabase.from('scientific_works').select('table_data').eq('user_id', uid).maybeSingle();
+        let scCount = 0;
+        if (sc?.table_data) {
+           const td = sc.table_data;
+           scCount = td.filter((r: string[]) => r[1]?.trim() !== '').length;
+        }
+
+        const { data: mn } = await supabase.from('mentor_works').select('table_data').eq('user_id', uid).maybeSingle();
+        let mnCount = 0;
+        if (mn?.table_data) {
+           const td = mn.table_data;
+           mnCount = td.filter((r: string[]) => r[1]?.trim() !== '').length;
+        }
+
+        setStats({
+          academic: { ...stats.academic, actual: acCount },
+          methodical: { ...stats.methodical, actual: meCount },
+          scientific: { ...stats.scientific, actual: scCount },
+          mentor: { ...stats.mentor, actual: mnCount },
+        });
       }
     };
-    fetchAppr();
+    fetchData();
   }, [adminUserId]);
+
+  const summaryData = [stats.academic, stats.methodical, stats.scientific, stats.mentor];
 
   const toggleApproval = () => {
       if (!adminUserId) return;
@@ -359,49 +415,78 @@ export default function YearlyWork({ adminUserId, isTasdiqlovchi }: { adminUserI
             <tbody>
               <tr>
                 <td className="border border-black dark:border-white p-3 font-bold text-center">REJA</td>
-                <td className="border border-black dark:border-white p-3 font-bold">521</td>
-                <td className="border border-black dark:border-white p-3 font-bold">1</td>
-                <td className="border border-black dark:border-white p-3 font-bold">3</td>
-                <td className="border border-black dark:border-white p-3 font-bold">2</td>
+                <td className="border border-black dark:border-white p-3 font-bold">{stats.academic.plan}</td>
+                <td className="border border-black dark:border-white p-3 font-bold">{stats.methodical.plan}</td>
+                <td className="border border-black dark:border-white p-3 font-bold">{stats.scientific.plan}</td>
+                <td className="border border-black dark:border-white p-3 font-bold">{stats.mentor.plan}</td>
               </tr>
               <tr>
                 <td className="border border-black dark:border-white p-3 font-bold text-center">HAQIQAT</td>
-                <td className="border border-black dark:border-white p-3"></td>
-                <td className="border border-black dark:border-white p-3"></td>
-                <td className="border border-black dark:border-white p-3"></td>
-                <td className="border border-black dark:border-white p-3"></td>
+                <td className="border border-black dark:border-white p-3 font-bold text-indigo-600">{stats.academic.actual}</td>
+                <td className="border border-black dark:border-white p-3 font-bold text-indigo-600">{stats.methodical.actual}</td>
+                <td className="border border-black dark:border-white p-3 font-bold text-indigo-600">{stats.scientific.actual}</td>
+                <td className="border border-black dark:border-white p-3 font-bold text-indigo-600">{stats.mentor.actual}</td>
               </tr>
               <tr>
                 <td className="border border-black dark:border-white p-3 font-bold text-center">FARQLANISHI, foizda</td>
-                <td className="border border-black dark:border-white p-3"></td>
-                <td className="border border-black dark:border-white p-3"></td>
-                <td className="border border-black dark:border-white p-3"></td>
-                <td className="border border-black dark:border-white p-3"></td>
+                <td className="border border-black dark:border-white p-3">{percentCalc(stats.academic.actual, stats.academic.plan)}%</td>
+                <td className="border border-black dark:border-white p-3">{percentCalc(stats.methodical.actual, stats.methodical.plan)}%</td>
+                <td className="border border-black dark:border-white p-3">{percentCalc(stats.scientific.actual, stats.scientific.plan)}%</td>
+                <td className="border border-black dark:border-white p-3">{percentCalc(stats.mentor.actual, stats.mentor.plan)}%</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <div className="space-y-6 mt-8">
+        <div className="space-y-6 mt-8 print:break-inside-avoid">
+          {isTasdiqlovchi && (
+             <div className="flex items-center gap-2 mb-4 print:hidden">
+               <input 
+                 type="checkbox" 
+                 id="allowEdit"
+                 checked={canTeacherEditComments}
+                 onChange={(e) => {
+                   setCanTeacherEditComments(e.target.checked);
+                   if (adminUserId) {
+                     localStorage.setItem('edit_comments_' + adminUserId, e.target.checked ? 'true' : 'false');
+                   }
+                 }}
+                 className="w-4 h-4 text-indigo-600 rounded"
+               />
+               <label htmlFor="allowEdit" className="text-sm font-semibold text-gray-700 dark:text-gray-300">O'qituvchi xulosalarni tahrirlashi mumkin</label>
+             </div>
+          )}
+
           <div>
-            <div className="flex items-end mb-4">
-              <span className="font-bold whitespace-nowrap mr-2 text-lg">Kafedra yig'ilishining xulosasi</span>
-              <div className="flex-1 border-b border-black dark:border-white w-full h-5"></div>
-            </div>
-            <div className="border-b border-black dark:border-white w-full h-8"></div>
-            <div className="border-b border-black dark:border-white w-full h-8"></div>
-            <div className="border-b border-black dark:border-white w-full h-8"></div>
+             <h3 className="font-bold text-lg mb-2">Kafedra yig'ilishining xulosasi</h3>
+             <textarea 
+               value={kafedraXulosa}
+               onChange={(e) => {
+                 setKafedraXulosa(e.target.value);
+                 if (adminUserId || sessionUserId) {
+                   localStorage.setItem('kafedra_xulosa_' + (adminUserId || sessionUserId), e.target.value);
+                 }
+               }}
+               disabled={!isTasdiqlovchi && !canTeacherEditComments}
+               className="w-full min-h-[120px] p-4 bg-transparent border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl focus:border-indigo-500 focus:ring-0 outline-none resize-none disabled:opacity-75"
+               placeholder="Kafedra xulosasi matnini kiriting..."
+             />
           </div>
 
           <div className="pt-4">
-            <div className="flex items-end mb-4">
-              <span className="font-bold whitespace-nowrap mr-2 text-lg">Fakultet kengashi qarori</span>
-              <div className="flex-1 border-b border-black dark:border-white w-full h-5"></div>
-            </div>
-            <div className="border-b border-black dark:border-white w-full h-8"></div>
-            <div className="border-b border-black dark:border-white w-full h-8"></div>
-            <div className="border-b border-black dark:border-white w-full h-8"></div>
-            <div className="border-b border-black dark:border-white w-full h-8"></div>
+             <h3 className="font-bold text-lg mb-2">Fakultet kengashi qarori</h3>
+             <textarea 
+               value={fakultetQarori}
+               onChange={(e) => {
+                 setFakultetQarori(e.target.value);
+                 if (adminUserId || sessionUserId) {
+                   localStorage.setItem('fakultet_qarori_' + (adminUserId || sessionUserId), e.target.value);
+                 }
+               }}
+               disabled={!isTasdiqlovchi && !canTeacherEditComments}
+               className="w-full min-h-[120px] p-4 bg-transparent border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl focus:border-indigo-500 focus:ring-0 outline-none resize-none disabled:opacity-75"
+               placeholder="Fakultet qarori matnini kiriting..."
+             />
           </div>
 
           <div className="pt-8 space-y-6 ml-8 md:ml-16 max-w-xl">

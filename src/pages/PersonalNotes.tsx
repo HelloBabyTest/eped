@@ -91,9 +91,12 @@ export default function PersonalNotes({ adminUserId }: { adminUserId?: string })
 
   const fetchNotes = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const targetUserId = adminUserId || user.id;
+      let targetUserId = adminUserId;
+      if (!targetUserId) {
+         const { data: { session } } = await supabase.auth.getSession();
+         if (!session?.user) return;
+         targetUserId = session.user.id;
+      }
 
       const { data, error } = await supabase
         .from('personal_notes')
@@ -221,6 +224,11 @@ export default function PersonalNotes({ adminUserId }: { adminUserId?: string })
     } catch (err: any) {
       setError(err.message);
     }
+  };
+
+  const handleDownload = async (fileUrl: string, fileName: string) => {
+    const { handleFileDownload } = await import('../lib/downloadHelper');
+    handleFileDownload(fileUrl, fileName);
   };
 
   const toggleVisibility = async () => {
@@ -454,14 +462,12 @@ export default function PersonalNotes({ adminUserId }: { adminUserId?: string })
                           <Download className="w-4 h-4 flex-shrink-0" />
                           <span className="truncate">{note.file_name}</span>
                         </div>
-                        <a
-                          href={note.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          onClick={(e) => { e.preventDefault(); handleDownload(note.file_url, note.file_name); }}
                           className="text-sm font-bold text-indigo-600 hover:text-indigo-700 whitespace-nowrap ml-2"
                         >
                           {t('download')}
-                        </a>
+                        </button>
                       </div>
                     )}
                     

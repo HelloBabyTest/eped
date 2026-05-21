@@ -43,7 +43,7 @@ const fixData = (data: any[]): string[][] => {
   });
 };
 
-export default function AcademicWork({ adminUserId }: { adminUserId?: string }) {
+export default function AcademicWork({ adminUserId, isDistributor }: { adminUserId?: string, isDistributor?: boolean }) {
   const { t } = useLanguage();
   const [grid, setGrid] = useState<SemesterData>({ kuzgi: DEFAULT_TEMPLATE, bahorgi: DEFAULT_TEMPLATE });
   const [savedData, setSavedData] = useState<SemesterData>({ kuzgi: DEFAULT_TEMPLATE, bahorgi: DEFAULT_TEMPLATE });
@@ -56,22 +56,42 @@ export default function AcademicWork({ adminUserId }: { adminUserId?: string }) 
   
   const [openDropdown, setOpenDropdown] = useState<{r: number, c: number} | null>(null);
   const [availableGroups, setAvailableGroups] = useState<{id: string, name: string}[]>([]);
+  
+  const [distributeModalOpen, setDistributeModalOpen] = useState<number | null>(null);
+  const [distributeTeachers, setDistributeTeachers] = useState<{id: string, full_name: string}[]>([]);
+  const [searchTeacher, setSearchTeacher] = useState('');
 
   useEffect(() => {
-    if (adminUserId) {
+    if (adminUserId || isDistributor) {
        const globalGrps = localStorage.getItem('global_groups');
        if (globalGrps) {
            try { setAvailableGroups(JSON.parse(globalGrps)); } catch (e) {}
        }
     }
-  }, [adminUserId]);
+  }, [adminUserId, isDistributor]);
+
+  useEffect(() => {
+    if (isDistributor) {
+      const fetchTeachers = async () => {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .eq('role', 'pedagog')
+          .order('full_name');
+        if (data) setDistributeTeachers(data);
+      };
+      fetchTeachers();
+    }
+  }, [isDistributor]);
 
   const fetchData = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const targetUserId = adminUserId || user.id;
+      let targetUserId = adminUserId;
+      if (!targetUserId) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) return;
+        targetUserId = session.user.id;
+      }
 
       const { data, error } = await supabase
         .from('academic_works')
@@ -173,6 +193,87 @@ export default function AcademicWork({ adminUserId }: { adminUserId?: string }) 
     }
   };
 
+  const [isDistributing, setIsDistributing] = useState(false);
+
+  const distributeRowToTeacher = async (teacherId: string) => {
+    if (distributeModalOpen === null) return;
+    setIsDistributing(true);
+    try {
+      const rowIndex = distributeModalOpen;
+      const rowToCopy = grid[activeSemester][rowIndex];
+
+      // Fetch teacher's current table data
+      const { data: teacherData, error: fetchErr } = await supabase
+        .from('academic_works')
+        .select('table_data')
+        .eq('user_id', teacherId)
+        .maybeSingle();
+
+      if (fetchErr) throw fetchErr;
+
+      let formattedData: SemesterData;
+      if (teacherData?.table_data) {
+        const rawData = teacherData.table_data;
+        if (Array.isArray(rawData)) {
+          formattedData = {
+            kuzgi: fixData(rawData),
+            bahorgi: DEFAULT_TEMPLATE,
+            kuzgiLocked: {}, bahorgiLocked: {}, kuzgiExtraCols: [], bahorgiExtraCols: []
+          };
+        } else {
+          formattedData = {
+            kuzgi: fixData(rawData.kuzgi || []),
+            bahorgi: fixData(rawData.bahorgi || []),
+            kuzgiLocked: rawData.kuzgiLocked || {},
+            bahorgiLocked: rawData.bahorgiLocked || {},
+            kuzgiExtraCols: rawData.kuzgiExtraCols || [],
+            bahorgiExtraCols: rawData.bahorgiExtraCols || [],
+          };
+        }
+      } else {
+        formattedData = { ...initialData };
+      }
+
+      // Find the last NO. and add the new row
+      const targetGrid = formattedData[activeSemester];
+      const newRow = [...rowToCopy];
+      
+      const lastRowIndex = targetGrid.length - 1;
+      const lastNo = parseInt(targetGrid[lastRowIndex]?.[0]);
+      if (!isNaN(lastNo)) {
+        newRow[0] = (lastNo + 1).toString();
+      } else if (targetGrid.length === 1 && targetGrid[0].every(c => c === '')) {
+        // if table is empty
+        newRow[0] = "1";
+        targetGrid.pop();
+      } else {
+         newRow[0] = (targetGrid.length + 1).toString();
+      }
+
+      formattedData[activeSemester] = [...targetGrid, newRow];
+
+      // Update their table
+      const { error: updateErr } = await supabase
+        .from('academic_works')
+        .upsert({
+          user_id: teacherId,
+          table_data: formattedData,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+
+      if (updateErr) throw updateErr;
+
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+      setDistributeModalOpen(null);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Xatolik yuz berdi');
+    } finally {
+      setIsDistributing(false);
+    }
+  };
+
   const updateCell = (rowIndex: number, colIndex: number, value: string) => {
     if (!adminUserId && colIndex === 2) return;
     const lockKey = `${activeSemester}Locked` as 'kuzgiLocked' | 'bahorgiLocked';
@@ -197,11 +298,18 @@ export default function AcademicWork({ adminUserId }: { adminUserId?: string }) 
       const colCount = COLS_COUNT + extraColsCount;
       const newRow = Array(colCount).fill('');
       
+      let nextNo = 1;
       const lastRowIndex = currentSemesterGrid.length - 1;
-      const lastNo = parseInt(currentSemesterGrid[lastRowIndex]?.[0]);
-      if (!isNaN(lastNo)) {
-        newRow[0] = (lastNo + 1).toString();
+      if (lastRowIndex >= 0) {
+        const lastNoStr = currentSemesterGrid[lastRowIndex]?.[0];
+        const lastNo = parseInt(lastNoStr);
+        if (!isNaN(lastNo)) {
+           nextNo = lastNo + 1;
+        } else {
+           nextNo = currentSemesterGrid.length + 1;
+        }
       }
+      newRow[0] = nextNo.toString();
       
       return {
         ...prev,
@@ -481,6 +589,7 @@ export default function AcademicWork({ adminUserId }: { adminUserId?: string }) 
                   )}
                 </th>
               ))}
+              {isDistributor && <th rowSpan={4} className="border border-black bg-indigo-50/50 min-w-[200px] text-center font-bold">O'qituvchiga<br/>Biriktirish</th>}
               {isEditing && adminUserId && <th rowSpan={4} className="w-12 border bg-gray-50"></th>}
             </tr>
             <tr className="bg-gray-50 leading-tight">
@@ -599,6 +708,16 @@ export default function AcademicWork({ adminUserId }: { adminUserId?: string }) 
                     </td>
                   );
                 })}
+                {isDistributor && (
+                  <td className="border border-gray-200 p-2 text-center bg-indigo-50/20 relative min-w-[200px]">
+                    <button
+                      onClick={() => setDistributeModalOpen(rowIndex)}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg font-bold transition-colors shadow-sm"
+                    >
+                      O'qituvchiga biriktirish
+                    </button>
+                  </td>
+                )}
                 {isEditing && adminUserId && (
                   <td className="border border-gray-200 p-0 text-center bg-gray-50 group-hover/row:bg-red-50 transition-colors relative w-12">
                     <button
@@ -636,6 +755,7 @@ export default function AcademicWork({ adminUserId }: { adminUserId?: string }) 
                   </td>
                 );
               })}
+              {isDistributor && <td className="border border-gray-200 bg-gray-50/80"></td>}
               {isEditing && adminUserId && (
                 <td className="border border-gray-200 bg-gray-50/80"></td>
               )}
@@ -656,6 +776,59 @@ export default function AcademicWork({ adminUserId }: { adminUserId?: string }) 
           </div>
         )}
       </div>
+
+      <AnimatePresence>
+        {distributeModalOpen !== null && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl shadow-xl max-w-md w-full overflow-hidden"
+            >
+              <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h3 className="text-xl font-bold text-gray-900">O'qituvchiga biriktirish</h3>
+                <button onClick={() => setDistributeModalOpen(null)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    placeholder="O'qituvchini qidiring..." 
+                    value={searchTeacher}
+                    onChange={(e) => setSearchTeacher(e.target.value)}
+                    className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  />
+                </div>
+                <div className="max-h-64 overflow-y-auto space-y-2 pr-2">
+                  {distributeTeachers
+                    .filter(t => (t.full_name || '').toLowerCase().includes(searchTeacher.toLowerCase()))
+                    .map(teacher => (
+                      <div key={teacher.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl hover:bg-indigo-50 hover:border-indigo-100 transition-colors group">
+                        <div>
+                          <div className="font-bold text-gray-900">{teacher.full_name || 'Ismsiz'}</div>
+                          <div className="text-xs text-gray-500">ID: {teacher.id.slice(0,8)}</div>
+                        </div>
+                        <button
+                          onClick={() => distributeRowToTeacher(teacher.id)}
+                          disabled={isDistributing}
+                          className="px-4 py-2 bg-white border border-indigo-200 text-indigo-600 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-600 hover:text-white transition-all disabled:opacity-50"
+                        >
+                          Biriktirish
+                        </button>
+                      </div>
+                    ))}
+                  {distributeTeachers.length === 0 && (
+                    <div className="text-center p-4 text-gray-500 text-sm">O'qituvchilar topilmadi</div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -18,6 +18,7 @@ import ScientificWork from './ScientificWork';
 import MethodicalWork from './MethodicalWork';
 import MentorWork from './MentorWork';
 import PersonalNotes from './PersonalNotes';
+import AdminChatInterface from '../components/AdminChatInterface';
 
 type Profile = {
   id: string;
@@ -39,6 +40,7 @@ export default function AdminDashboardPage() {
   
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [activeTab, setActiveTab] = useState<'academic' | 'scientific' | 'methodical' | 'mentor' | 'notes'>('academic');
+  const [dashboardView, setDashboardView] = useState<'overview' | 'chat'>('overview');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'active' | 'rejected'>('all');
 
@@ -364,6 +366,21 @@ export default function AdminDashboardPage() {
           <h1 className="text-4xl font-black text-gray-900 tracking-tight">Umumiy tizim nazorati</h1>
           <p className="text-gray-500 mt-2 text-lg">Platformadagi barcha foydalanuvchilar va ma'lumotlar tahlili.</p>
         </div>
+        
+        <div className="flex bg-gray-100 p-1 rounded-2xl">
+          <button 
+            onClick={() => setDashboardView('overview')}
+            className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${dashboardView === 'overview' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <TrendingUp className="w-4 h-4" /> Bosh sahifa
+          </button>
+          <button 
+            onClick={() => setDashboardView('chat')}
+            className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${dashboardView === 'chat' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <Users className="w-4 h-4" /> Foydalanuvchilar bilan chat
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -373,7 +390,11 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Stats Cards */}
+      {dashboardView === 'chat' ? (
+        <AdminChatInterface />
+      ) : (
+        <>
+          {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <motion.div 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
@@ -662,6 +683,8 @@ export default function AdminDashboardPage() {
           </div>
         </motion.div>
       </div>
+      </>
+      )}
 
       {/* Moda for Create User */}
       <AnimatePresence>
