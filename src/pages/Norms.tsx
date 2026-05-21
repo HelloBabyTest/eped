@@ -127,11 +127,22 @@ const DEFAULT_POSITIONS: Position[] = [
 ];
 
 export default function Norms({ adminUserId }: { adminUserId?: string }) {
-  const [positions, setPositions] = useState<Position[]>(DEFAULT_POSITIONS);
+  const [positions, setPositions] = useState<Position[]>(() => {
+    const cached = localStorage.getItem('cache_university_norms');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (_) {}
+    }
+    return DEFAULT_POSITIONS;
+  });
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    const cached = localStorage.getItem('cache_university_norms');
+    return !cached;
+  });
   const [saving, setSaving] = useState(false);
-  const [canEdit, setCanEdit] = useState(false);
+  const [canEdit, setCanEdit] = useState(() => {
+    return localStorage.getItem('cache_can_edit_norms') === 'true';
+  });
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -145,6 +156,10 @@ export default function Norms({ adminUserId }: { adminUserId?: string }) {
         
         if (profile && ['admin', 'tahrirlovchi', 'rahbariyat'].includes(profile.role)) {
           setCanEdit(true);
+          localStorage.setItem('cache_can_edit_norms', 'true');
+        } else {
+          setCanEdit(false);
+          localStorage.setItem('cache_can_edit_norms', 'false');
         }
       }
     };
@@ -160,6 +175,7 @@ export default function Norms({ adminUserId }: { adminUserId?: string }) {
 
         if (data && data.norms_data) {
           setPositions(data.norms_data);
+          localStorage.setItem('cache_university_norms', JSON.stringify(data.norms_data));
         }
       } catch (err) {
         console.error('Error fetching norms:', err);
@@ -180,6 +196,7 @@ export default function Norms({ adminUserId }: { adminUserId?: string }) {
         .insert({ norms_data: positions, updated_at: new Date().toISOString() });
 
       if (error) throw error;
+      localStorage.setItem('cache_university_norms', JSON.stringify(positions));
       setIsEditing(false);
       alert('Me\'yorlar muvaffaqiyatli saqlandi!');
     } catch (err: any) {

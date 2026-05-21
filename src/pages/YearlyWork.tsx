@@ -24,11 +24,21 @@ const detailedTasks = [
 
 export default function YearlyWork({ adminUserId, isTasdiqlovchi }: { adminUserId?: string, isTasdiqlovchi?: boolean }) {
   const [activeTab, setActiveTab] = useState<'overview' | 'detailed'>('overview');
-  const [stats, setStats] = useState({
-    academic: { id: 1, label: "O'quv yuklama", plan: 521, actual: 0 },
-    methodical: { id: 2, label: "O'quv-uslubiy ishlar", plan: 1, actual: 0 },
-    scientific: { id: 3, label: "Ilmiy-tadqiqot ishlari", plan: 3, actual: 0 },
-    mentor: { id: 4, label: "Ustoz-shogird ishlari", plan: 2, actual: 0 },
+
+  const [stats, setStats] = useState(() => {
+    const userId = adminUserId || localStorage.getItem('current_user_id') || '';
+    if (userId) {
+      const cached = localStorage.getItem('cache_yearly_work_stats_' + userId);
+      if (cached) {
+        try { return JSON.parse(cached); } catch (_) {}
+      }
+    }
+    return {
+      academic: { id: 1, label: "O'quv yuklama", plan: 521, actual: 0 },
+      methodical: { id: 2, label: "O'quv-uslubiy ishlar", plan: 1, actual: 0 },
+      scientific: { id: 3, label: "Ilmiy-tadqiqot ishlari", plan: 3, actual: 0 },
+      mentor: { id: 4, label: "Ustoz-shogird ishlari", plan: 2, actual: 0 },
+    };
   });
 
   const [isApproved, setIsApproved] = useState(false);
@@ -59,41 +69,91 @@ export default function YearlyWork({ adminUserId, isTasdiqlovchi }: { adminUserI
         setFakultetQarori(localStorage.getItem('fakultet_qarori_' + uid) || '');
         setCanTeacherEditComments(localStorage.getItem('edit_comments_' + uid) === 'true');
         
+        const getCellText = (cell: any): string => {
+          if (typeof cell === 'string') return cell;
+          if (cell && typeof cell === 'object') {
+            if (typeof cell.text === 'string') return cell.text;
+          }
+          return '';
+        };
+
         // Fetch academic works (calculate completed tasks or hours)
         const { data: ac } = await supabase.from('academic_works').select('table_data').eq('user_id', uid).maybeSingle();
         let acCount = 0;
         if (ac?.table_data) {
-           const td = Array.isArray(ac.table_data) ? ac.table_data : [...(ac.table_data.kuzgi || []), ...(ac.table_data.bahorgi || [])];
-           acCount = td.filter(r => r[1]?.trim() !== '').length; // count non-empty rows
+          let rows: any[] = [];
+          if (Array.isArray(ac.table_data)) {
+            rows = ac.table_data;
+          } else if (ac?.table_data && typeof ac.table_data === 'object') {
+            const kuzgi = Array.isArray((ac.table_data as any).kuzgi) ? (ac.table_data as any).kuzgi : [];
+            const bahorgi = Array.isArray((ac.table_data as any).bahorgi) ? (ac.table_data as any).bahorgi : [];
+            rows = [...kuzgi, ...bahorgi];
+          }
+          acCount = rows.filter(r => Array.isArray(r) && typeof r[1] === 'string' && r[1].trim() !== '').length;
         }
 
         const { data: me } = await supabase.from('methodical_works').select('table_data').eq('user_id', uid).maybeSingle();
         let meCount = 0;
         if (me?.table_data) {
-           const td = me.table_data;
-           meCount = td.filter((r: string[]) => r[1]?.trim() !== '').length;
+          let rows: any[] = [];
+          if (Array.isArray(me.table_data)) {
+            rows = me.table_data;
+          } else if (me?.table_data && typeof me.table_data === 'object' && Array.isArray((me.table_data as any).grid)) {
+            rows = (me.table_data as any).grid;
+          }
+          meCount = rows.filter(r => {
+            if (!Array.isArray(r)) return false;
+            const col0 = getCellText(r[0]).trim();
+            const col1 = getCellText(r[1]).trim();
+            if (col0 === '№' || (col0 === '1' && col1 === '2')) return false;
+            return col1 !== '';
+          }).length;
         }
 
         const { data: sc } = await supabase.from('scientific_works').select('table_data').eq('user_id', uid).maybeSingle();
         let scCount = 0;
         if (sc?.table_data) {
-           const td = sc.table_data;
-           scCount = td.filter((r: string[]) => r[1]?.trim() !== '').length;
+          let rows: any[] = [];
+          if (Array.isArray(sc.table_data)) {
+            rows = sc.table_data;
+          } else if (sc?.table_data && typeof sc.table_data === 'object' && Array.isArray((sc.table_data as any).grid)) {
+            rows = (sc.table_data as any).grid;
+          }
+          scCount = rows.filter(r => {
+            if (!Array.isArray(r)) return false;
+            const col0 = getCellText(r[0]).trim();
+            const col1 = getCellText(r[1]).trim();
+            if (col0 === '№' || (col0 === '1' && col1 === '2')) return false;
+            return col1 !== '';
+          }).length;
         }
 
         const { data: mn } = await supabase.from('mentor_works').select('table_data').eq('user_id', uid).maybeSingle();
         let mnCount = 0;
         if (mn?.table_data) {
-           const td = mn.table_data;
-           mnCount = td.filter((r: string[]) => r[1]?.trim() !== '').length;
+          let rows: any[] = [];
+          if (Array.isArray(mn.table_data)) {
+            rows = mn.table_data;
+          } else if (mn?.table_data && typeof mn.table_data === 'object' && Array.isArray((mn.table_data as any).grid)) {
+            rows = (mn.table_data as any).grid;
+          }
+          mnCount = rows.filter(r => {
+            if (!Array.isArray(r)) return false;
+            const col0 = getCellText(r[0]).trim();
+            const col1 = getCellText(r[1]).trim();
+            if (col0 === '№' || (col0 === '1' && col1 === '2')) return false;
+            return col1 !== '';
+          }).length;
         }
 
-        setStats({
+        const updatedStats = {
           academic: { ...stats.academic, actual: acCount },
           methodical: { ...stats.methodical, actual: meCount },
           scientific: { ...stats.scientific, actual: scCount },
           mentor: { ...stats.mentor, actual: mnCount },
-        });
+        };
+        setStats(updatedStats);
+        localStorage.setItem('cache_yearly_work_stats_' + uid, JSON.stringify(updatedStats));
       }
     };
     fetchData();

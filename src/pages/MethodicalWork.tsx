@@ -24,10 +24,21 @@ const DEFAULT_TEMPLATE: CellData[][] = [
 
 export default function MethodicalWork({ adminUserId, isTasdiqlovchi }: { adminUserId?: string, isTasdiqlovchi?: boolean }) {
   const { t } = useLanguage();
-  const [grid, setGrid] = useState<CellData[][]>(DEFAULT_TEMPLATE);
-  const [savedData, setSavedData] = useState<CellData[][]>(DEFAULT_TEMPLATE);
+
+  const cachedData = (() => {
+    const userId = adminUserId || localStorage.getItem('current_user_id') || '';
+    if (!userId) return null;
+    const cache = localStorage.getItem('cache_methodical_work_' + userId);
+    if (cache) {
+      try { return JSON.parse(cache); } catch (_) { return null; }
+    }
+    return null;
+  })();
+
+  const [grid, setGrid] = useState<CellData[][]>(cachedData || DEFAULT_TEMPLATE);
+  const [savedData, setSavedData] = useState<CellData[][]>(cachedData || DEFAULT_TEMPLATE);
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!cachedData);
   const [saving, setSaving] = useState(false);
   const [uploadingCell, setUploadingCell] = useState<{row: number, col: number} | null>(null);
   const [deletingCell, setDeletingCell] = useState<{row: number, col: number} | null>(null);
@@ -78,10 +89,12 @@ export default function MethodicalWork({ adminUserId, isTasdiqlovchi }: { adminU
         setGrid(tableData);
         setSavedData(tableData);
         setIsEditing(false);
+        localStorage.setItem('cache_methodical_work_' + targetUserId, JSON.stringify(tableData));
       } else {
         setGrid(DEFAULT_TEMPLATE);
         setSavedData(DEFAULT_TEMPLATE);
         setIsEditing(true);
+        localStorage.setItem('cache_methodical_work_' + targetUserId, JSON.stringify(DEFAULT_TEMPLATE));
       }
     } catch (err: any) {
       console.error('Error fetching methodical work:', err);
@@ -118,6 +131,7 @@ export default function MethodicalWork({ adminUserId, isTasdiqlovchi }: { adminU
       
       setSavedData(grid);
       setIsEditing(false);
+      localStorage.setItem('cache_methodical_work_' + targetUserId, JSON.stringify(grid));
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {

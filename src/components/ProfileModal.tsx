@@ -126,18 +126,18 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-2xl shadow-2xl z-[70] overflow-hidden flex flex-col max-h-[90vh]"
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-32px)] sm:w-full sm:max-w-2xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl z-[70] overflow-hidden flex flex-col max-h-[92vh] border dark:border-gray-800"
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <User className="w-5 h-5 text-indigo-600" /> Profil ma'lumotlari
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <User className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> Profil ma'lumotlari
               </h2>
-              <button onClick={handleClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+              <button onClick={handleClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto w-full flex-1">
+            <div className="p-6 overflow-y-auto w-full flex-1 bg-white dark:bg-gray-900 custom-scrollbar">
 
               {requestSent && (
                 <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
@@ -254,10 +254,10 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 )}
 
                 {/* Free Editable Section */}
-                <div className="bg-white border border-gray-200 rounded-xl p-5">
+                <div className="bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
                    <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Shaxsiy & Aloqa ma'lumotlari</h3>
-                    <span className="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold uppercase tracking-wider flex items-center gap-1">
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Shaxsiy & Aloqa ma'lumotlari</h3>
+                    <span className="text-[10px] bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 px-2 py-1 rounded-full font-semibold uppercase tracking-wider flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3" /> Erkin tahrirlanadi
                     </span>
                   </div>
@@ -271,7 +271,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         type="email" 
                         value={localEditable.email} 
                         onChange={e => setLocalEditable({...localEditable, email: e.target.value})}
-                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none transition-all"
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none transition-all dark:text-white"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -282,7 +282,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         type="text" 
                         value={localEditable.phone} 
                         onChange={e => setLocalEditable({...localEditable, phone: e.target.value})}
-                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none transition-all"
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none transition-all dark:text-white"
                       />
                     </div>
                   </div>
@@ -295,27 +295,27 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       rows={3}
                       value={localEditable.bio} 
                       onChange={e => setLocalEditable({...localEditable, bio: e.target.value})}
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none transition-all resize-none"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none transition-all resize-none dark:text-white"
                     />
                   </div>
 
                 </div>
 
                 {/* Devices & Sessions Section */}
-                <div className="bg-white border border-gray-200 rounded-xl p-5">
+                <div className="bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
                    <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Qurilmalar va Sessiyalar</h3>
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Qurilmalar va Sessiyalar</h3>
                   </div>
 
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-indigo-50 border border-indigo-100 rounded-lg mb-3">
+                    <div className="flex items-center justify-between p-3 bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-100/40 dark:border-indigo-900/30 rounded-lg mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                        <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg text-indigo-600 dark:text-indigo-450">
                           <Laptop className="w-5 h-5" />
                         </div>
                         <div>
-                          <div className="text-sm font-bold text-gray-900">Joriy qurilma</div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-sm font-bold text-gray-900 dark:text-gray-100">Joriy qurilma</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
                             {(() => {
                               const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
                               const browser = ua.includes('Chrome') ? 'Chrome' : ua.includes('Firefox') ? 'Firefox' : ua.includes('Safari') ? 'Safari' : 'Browser';
@@ -325,27 +325,27 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                           </div>
                         </div>
                       </div>
-                      <div className="text-xs font-bold text-indigo-600 px-2 py-1 bg-indigo-100 rounded-md">
+                      <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400 px-2 py-1 bg-indigo-100 dark:bg-indigo-900/40 rounded-md">
                         Faol
                       </div>
                     </div>
 
                     {mockSessions.map(session => (
-                      <div key={session.id} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-lg hover:border-red-100 group transition-all">
+                      <div key={session.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg hover:border-red-100 dark:hover:border-red-900/30 group transition-all">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-gray-100 rounded-lg text-gray-500">
+                          <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-500 dark:text-gray-400">
                             <Laptop className="w-5 h-5" />
                           </div>
                           <div>
-                            <div className="text-sm font-bold text-gray-900">{session.name}</div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-sm font-bold text-gray-900 dark:text-gray-100">{session.name}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
                               {session.details}
                             </div>
                           </div>
                         </div>
                         <button 
                           onClick={() => setMockSessions(prev => prev.filter(s => s.id !== session.id))}
-                          className="px-2 py-1 text-xs font-semibold text-red-600 opacity-0 group-hover:opacity-100 hover:bg-red-50 rounded transition-all"
+                          className="px-2 py-1 text-xs font-semibold text-red-600 dark:text-red-400 opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-950/40 rounded transition-all"
                         >
                           Tugatish
                         </button>
@@ -353,7 +353,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     ))}
 
                     <div className="flex items-center justify-between">
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
                         Boshqa qurilmalardagi sessiyalarni yopish
                       </div>
                       <button
@@ -365,7 +365,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                             console.error(err);
                           }
                         }}
-                        className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                        className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-lg hover:bg-red-100 dark:hover:bg-red-950/40 transition-colors"
                       >
                         Barchasini tugatish
                       </button>
@@ -376,23 +376,23 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex justify-between items-center">
+            <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 flex justify-between items-center shrink-0 select-none">
               <button 
                 onClick={handleLogout}
-                className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-sm font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-xl hover:bg-red-100 dark:hover:bg-red-950/40 transition-colors flex items-center gap-2"
               >
                 <LogOut className="w-4 h-4" /> Chiqish
               </button>
               <div className="flex gap-3">
                 <button 
                   onClick={handleClose}
-                  className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
                 >
                   Bekor qilish
                 </button>
                 <button 
                   onClick={handleSave}
-                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-sm transition-colors"
+                  className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 dark:bg-indigo-500 rounded-xl hover:bg-indigo-700 dark:hover:bg-indigo-600 shadow-sm transition-colors"
                 >
                   O'zgarishlarni saqlash
                 </button>

@@ -37,12 +37,23 @@ const DEFAULT_TEMPLATE: CellData[][] = [
 
 export default function ScientificWork({ adminUserId, isTasdiqlovchi }: { adminUserId?: string, isTasdiqlovchi?: boolean }) {
   const { t } = useLanguage();
-  const [grid, setGrid] = useState<CellData[][]>(DEFAULT_TEMPLATE);
-  const [savedData, setSavedData] = useState<CellData[][]>(DEFAULT_TEMPLATE);
-  const [allowedCells, setAllowedCells] = useState<Record<string, boolean>>({});
-  const [savedAllowedCells, setSavedAllowedCells] = useState<Record<string, boolean>>({});
+
+  const cachedData = (() => {
+    const userId = adminUserId || localStorage.getItem('current_user_id') || '';
+    if (!userId) return null;
+    const cache = localStorage.getItem('cache_scientific_work_' + userId);
+    if (cache) {
+      try { return JSON.parse(cache); } catch (_) { return null; }
+    }
+    return null;
+  })();
+
+  const [grid, setGrid] = useState<CellData[][]>(cachedData?.grid || DEFAULT_TEMPLATE);
+  const [savedData, setSavedData] = useState<CellData[][]>(cachedData?.grid || DEFAULT_TEMPLATE);
+  const [allowedCells, setAllowedCells] = useState<Record<string, boolean>>(cachedData?.allowedCells || {});
+  const [savedAllowedCells, setSavedAllowedCells] = useState<Record<string, boolean>>(cachedData?.allowedCells || {});
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!cachedData);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -93,24 +104,31 @@ export default function ScientificWork({ adminUserId, isTasdiqlovchi }: { adminU
       
       if (data?.table_data) {
         const tableData = data.table_data as any; // any to handle both formats
+        let loadedGrid = DEFAULT_TEMPLATE;
+        let loadedAllowed = {};
         if (Array.isArray(tableData)) {
+          loadedGrid = tableData;
           setGrid(tableData);
           setSavedData(tableData);
           setAllowedCells({});
           setSavedAllowedCells({});
         } else {
-          setGrid(tableData.grid || DEFAULT_TEMPLATE);
-          setSavedData(tableData.grid || DEFAULT_TEMPLATE);
-          setAllowedCells(tableData.allowedCells || {});
-          setSavedAllowedCells(tableData.allowedCells || {});
+          loadedGrid = tableData.grid || DEFAULT_TEMPLATE;
+          loadedAllowed = tableData.allowedCells || {};
+          setGrid(loadedGrid);
+          setSavedData(loadedGrid);
+          setAllowedCells(loadedAllowed);
+          setSavedAllowedCells(loadedAllowed);
         }
         setIsEditing(false);
+        localStorage.setItem('cache_scientific_work_' + targetUserId, JSON.stringify({ grid: loadedGrid, allowedCells: loadedAllowed }));
       } else {
         setGrid(DEFAULT_TEMPLATE);
         setSavedData(DEFAULT_TEMPLATE);
         setAllowedCells({});
         setSavedAllowedCells({});
         setIsEditing(true);
+        localStorage.setItem('cache_scientific_work_' + targetUserId, JSON.stringify({ grid: DEFAULT_TEMPLATE, allowedCells: {} }));
       }
     } catch (err: any) {
       console.error('Error fetching scientific work:', err);
@@ -148,6 +166,7 @@ export default function ScientificWork({ adminUserId, isTasdiqlovchi }: { adminU
       setSavedData(grid);
       setSavedAllowedCells(allowedCells);
       setIsEditing(false);
+      localStorage.setItem('cache_scientific_work_' + targetUserId, JSON.stringify({ grid, allowedCells }));
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {

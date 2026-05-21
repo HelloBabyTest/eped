@@ -45,11 +45,22 @@ const fixData = (data: any[]): string[][] => {
 
 export default function AcademicWork({ adminUserId, isDistributor }: { adminUserId?: string, isDistributor?: boolean }) {
   const { t } = useLanguage();
-  const [grid, setGrid] = useState<SemesterData>({ kuzgi: DEFAULT_TEMPLATE, bahorgi: DEFAULT_TEMPLATE });
-  const [savedData, setSavedData] = useState<SemesterData>({ kuzgi: DEFAULT_TEMPLATE, bahorgi: DEFAULT_TEMPLATE });
+
+  const cachedData = (() => {
+    const userId = adminUserId || localStorage.getItem('current_user_id') || '';
+    if (!userId) return null;
+    const cache = localStorage.getItem('cache_academic_work_' + userId);
+    if (cache) {
+      try { return JSON.parse(cache); } catch (_) { return null; }
+    }
+    return null;
+  })();
+
+  const [grid, setGrid] = useState<SemesterData>(cachedData || { kuzgi: DEFAULT_TEMPLATE, bahorgi: DEFAULT_TEMPLATE });
+  const [savedData, setSavedData] = useState<SemesterData>(cachedData || { kuzgi: DEFAULT_TEMPLATE, bahorgi: DEFAULT_TEMPLATE });
   const [activeSemester, setActiveSemester] = useState<'kuzgi' | 'bahorgi'>('kuzgi');
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!cachedData);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -129,10 +140,12 @@ export default function AcademicWork({ adminUserId, isDistributor }: { adminUser
         setGrid(formattedData);
         setSavedData(formattedData);
         setIsEditing(false);
+        localStorage.setItem('cache_academic_work_' + targetUserId, JSON.stringify(formattedData));
       } else {
         setGrid(initialData);
         setSavedData(initialData);
         setIsEditing(!!adminUserId);
+        localStorage.setItem('cache_academic_work_' + targetUserId, JSON.stringify(initialData));
       }
     } catch (err: any) {
       console.error('Error fetching academic work:', err);
@@ -169,6 +182,7 @@ export default function AcademicWork({ adminUserId, isDistributor }: { adminUser
       
       setSavedData(grid);
       setIsEditing(false);
+      localStorage.setItem('cache_academic_work_' + targetUserId, JSON.stringify(grid));
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {

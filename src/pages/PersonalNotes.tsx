@@ -21,9 +21,20 @@ interface Note {
 
 export default function PersonalNotes({ adminUserId }: { adminUserId?: string }) {
   const { t } = useLanguage();
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [isVisibleToEditor, setIsVisibleToEditor] = useState(true);
-  const [loading, setLoading] = useState(true);
+
+  const cachedData = (() => {
+    const userId = adminUserId || localStorage.getItem('current_user_id') || '';
+    if (!userId) return null;
+    const cache = localStorage.getItem('cache_personal_notes_' + userId);
+    if (cache) {
+      try { return JSON.parse(cache); } catch (_) { return null; }
+    }
+    return null;
+  })();
+
+  const [notes, setNotes] = useState<Note[]>(cachedData?.notes || []);
+  const [isVisibleToEditor, setIsVisibleToEditor] = useState(cachedData ? cachedData.isVisibleToEditor !== false : true);
+  const [loading, setLoading] = useState(!cachedData);
   const [isAdding, setIsAdding] = useState(false);
   const [newNote, setNewNote] = useState({ title: '', content: '' });
   const [file, setFile] = useState<File | null>(null);
@@ -106,11 +117,13 @@ export default function PersonalNotes({ adminUserId }: { adminUserId?: string })
 
       if (error) throw error;
       
+      let vis = true;
       const settingsNote = (data || []).find(n => n.title === 'SYSTEM_SETTINGS');
       if (settingsNote) {
         try {
           const settings = JSON.parse(settingsNote.content);
-          setIsVisibleToEditor(settings.visibleToEditor !== false);
+          vis = settings.visibleToEditor !== false;
+          setIsVisibleToEditor(vis);
         } catch (e) {
           setIsVisibleToEditor(true);
         }
@@ -118,7 +131,9 @@ export default function PersonalNotes({ adminUserId }: { adminUserId?: string })
         setIsVisibleToEditor(true);
       }
 
-      setNotes((data || []).filter(n => n.title !== 'SYSTEM_SETTINGS'));
+      const notesCleaned = (data || []).filter(n => n.title !== 'SYSTEM_SETTINGS');
+      setNotes(notesCleaned);
+      localStorage.setItem('cache_personal_notes_' + targetUserId, JSON.stringify({ notes: notesCleaned, isVisibleToEditor: vis }));
     } catch (err: any) {
       console.error('Error fetching notes:', err);
       setError(err.message);
