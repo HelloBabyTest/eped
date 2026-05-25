@@ -51,11 +51,11 @@ npm install
 ```
 
 ### 3️⃣ Baza sozlamalari (Environment)
-Kodlarim xavfsizlik maqsadida ma'lumotlar bazasi hisob ma'lumotlarisiz yuklangan. Bosh sahifada (root) `.env` faylini yaratasiz va quyidagilarni o'z kalitingiz bilan to'ldirasiz (Supabase ishlatsangiz):
+Kodlarim xavfsizlik maqsadida ma'lumotlar bazasi hisob ma'lumotlarisiz yuklangan. Bosh sahifada (root) `.env` faylini yaratasiz va buni o'z ma'lumotlar bazasi kalitingiz bilan to'ldirasiz:
 
 ```plaintext
-VITE_SUPABASE_URL=SIZNING_URL_KODINGIZ
-VITE_SUPABASE_ANON_KEY=SIZNING_ANONIM_KALITINGIZ
+VITE_DATABASE_URL=SIZNING_URL_KODINGIZ
+VITE_DATABASE_ANON_KEY=SIZNING_ANONIM_KALITINGIZ
 ```
 
 ### 4️⃣ Kodingizni yurgizing!
