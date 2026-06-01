@@ -66,3 +66,5 @@ npm run dev
 ```
 Dastur deyarli 1 soniyada tayyor bo'ladi. Terminal sizga qaysi local portni yurgizganini ko'rsatadi (odatda `http://localhost:3000`). Buni brauzerga yozsangiz ishlaydi. 
 
+Hammangizga foydali bo'ladi deb yozib chiqdim! Kamchiliklar bo'lsa hisobga olmaysiz degan umiddaman. 😉
+Otabek Choriyev. Qadr-qimmat bilan!

@@ -14,6 +14,7 @@ import { supabase } from '../lib/supabase';
 import LanguageSwitcher from './LanguageSwitcher';
 import ProfileModal from './ProfileModal';
 import ConfirmModal from './ConfirmModal';
+import NotificationBell from './NotificationBell';
 
 interface SidebarItemProps {
   to: string;
@@ -42,6 +43,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string>('');
   const { theme, toggleTheme } = useTheme();
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -61,6 +63,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         .select('status, role')
         .eq('id', user.id)
         .single();
+      
+      if (profile) {
+        setUserRole(profile.role);
+      }
       
       if (profile?.status === 'pending' && profile.role !== 'admin' && profile.role !== 'rahbariyat') {
         navigate('/pending-approval');
@@ -223,6 +229,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <LanguageSwitcher />
 
             <div className="h-8 w-px bg-gray-100 dark:bg-gray-800" />
+            
+            <NotificationBell role={userRole} />
 
             <div className="flex items-center gap-3">
               <button 

@@ -2,11 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Save, Loader2, AlertCircle, 
   Trash2, Rows, CheckCircle2, X,
-  Pencil, RotateCcw, Columns, Lock, Unlock, Printer
+  Pencil, RotateCcw, Columns, Lock, Unlock, Printer, FileUp
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
+import * as XLSX from 'xlsx';
 
 const COLS_COUNT = 28;
 const DEFAULT_TEMPLATE = [Array(COLS_COUNT).fill("")];
@@ -39,6 +40,19 @@ const fixData = (data: any[]): string[][] => {
     if (Array.isArray(row)) {
       row.forEach((cell, i) => { if (i < COLS_COUNT) newRow[i] = cell });
     }
+    
+    // Automatically calculate Hammasi on load
+    let sumR = 0;
+    let sumH = 0;
+    for (let i = 6; i <= 24; i += 2) {
+      sumR += parseFloat(newRow[i]) || 0;
+    }
+    for (let i = 7; i <= 25; i += 2) {
+      sumH += parseFloat(newRow[i]) || 0;
+    }
+    newRow[26] = sumR > 0 ? sumR.toString() : '';
+    newRow[27] = sumH > 0 ? sumH.toString() : '';
+
     return newRow;
   });
 };
@@ -289,20 +303,63 @@ export default function AcademicWork({ adminUserId, isDistributor }: { adminUser
   };
 
   const updateCell = (rowIndex: number, colIndex: number, value: string) => {
+    if (colIndex === 26 || colIndex === 27) return;
     if (!adminUserId && colIndex === 2) return;
     const lockKey = `${activeSemester}Locked` as 'kuzgiLocked' | 'bahorgiLocked';
     const isLocked = grid[lockKey]?.[`${rowIndex}_${colIndex}`];
     if (!adminUserId && isLocked) return;
 
+    let finalValue = value;
+    if (colIndex > 5 && colIndex < COLS_COUNT) {
+       finalValue = finalValue.replace(/[^0-9.]/g, '');
+       
+       // Ensure 'h' (haqiqat) does not exceed 'r' (reja)
+       if (!adminUserId && colIndex % 2 === 1 && finalValue !== '') {
+         const currentRow = grid[activeSemester][rowIndex];
+         const rValueStr = currentRow ? currentRow[colIndex - 1] : '0';
+         const rValue = parseFloat(rValueStr) || 0;
+         const hValue = parseFloat(finalValue) || 0;
+         if (hValue > rValue) {
+           finalValue = rValue.toString();
+         }
+       }
+    }
+
     setGrid(prev => {
       const currentSemesterGrid = [...prev[activeSemester]];
       currentSemesterGrid[rowIndex] = [...currentSemesterGrid[rowIndex]];
-      currentSemesterGrid[rowIndex][colIndex] = value;
+      currentSemesterGrid[rowIndex][colIndex] = finalValue;
+      
+      // Automatically calculate "Hammasi" (Total) columns
+      if (colIndex > 5 && colIndex < 26) {
+        let sumR = 0;
+        let sumH = 0;
+        for (let i = 6; i <= 24; i += 2) {
+          sumR += parseFloat(currentSemesterGrid[rowIndex][i]) || 0;
+        }
+        for (let i = 7; i <= 25; i += 2) {
+          sumH += parseFloat(currentSemesterGrid[rowIndex][i]) || 0;
+        }
+        currentSemesterGrid[rowIndex][26] = sumR > 0 ? sumR.toString() : '';
+        currentSemesterGrid[rowIndex][27] = sumH > 0 ? sumH.toString() : '';
+      }
+
       return {
         ...prev,
         [activeSemester]: currentSemesterGrid
       };
     });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const textareas = Array.from(document.querySelectorAll('textarea:not([readOnly])')) as HTMLTextAreaElement[];
+      const index = textareas.indexOf(e.currentTarget);
+      if (index > -1 && index + 1 < textareas.length) {
+        textareas[index + 1].focus();
+      }
+    }
   };
 
   const addRow = () => {
@@ -413,6 +470,55 @@ export default function AcademicWork({ adminUserId, isDistributor }: { adminUser
     });
   };
 
+  const handleExcelImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1 });
+        
+        if (data && data.length > 0) {
+          if (window.confirm("Excel faylidagi ma'lumotlar ushbu ko'rinishda jadvalga qo'llanilsinmi? (Joriy semestr ma'lumotlari ustidan yoziladi)")) {
+            // Re-apply length fix logic natively, keeping whatever was loaded plus empty columns if missing
+            const rows = (String(data[0]?.[0] || '').includes('№') || String(data[0]?.[0] || '').toLowerCase() === 'no' || String(data[0]?.[0] || '').toLowerCase() === 'no.') ? data.slice(1) : data;
+            const extraColsCount = grid[`${activeSemester}ExtraCols` as 'kuzgiExtraCols' | 'bahorgiExtraCols']?.length || 0;
+            const targetColsCount = COLS_COUNT + extraColsCount;
+
+            const newGrid = rows.map(row => {
+              const newRow = Array(targetColsCount).fill('');
+              if (Array.isArray(row)) {
+                row.forEach((cell, i) => { if (i < targetColsCount && cell !== undefined && cell !== null) newRow[i] = String(cell) });
+              }
+              return newRow;
+            });
+            if (newGrid.length === 0) newGrid.push(Array(targetColsCount).fill(''));
+            
+            setGrid(prev => ({
+               ...prev,
+               [activeSemester]: newGrid
+            }));
+            setIsEditing(true);
+          }
+        } else {
+          setError("Excel faylidan ma'lumot o'qib bo'lmadi yoki bo'sh.");
+          setTimeout(() => setError(null), 3000);
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Excel faylini tahlil qilishda xatolik yuz berdi.");
+        setTimeout(() => setError(null), 3000);
+      }
+      e.target.value = '';
+    };
+    reader.readAsBinaryString(file);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -434,6 +540,18 @@ export default function AcademicWork({ adminUserId, isDistributor }: { adminUser
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
+          {isDistributor && (
+            <label className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-bold hover:bg-emerald-100 transition-all shadow-sm cursor-pointer print:hidden">
+              <FileUp className="w-4 h-4" />
+              Excel dan o'qish
+              <input 
+                type="file" 
+                accept=".xlsx, .xls"
+                onChange={handleExcelImport} 
+                className="hidden" 
+              />
+            </label>
+          )}
           {!isEditing && (
             <>
               <button
@@ -657,6 +775,10 @@ export default function AcademicWork({ adminUserId, isDistributor }: { adminUser
               <tr key={rowIndex} className="hover:bg-indigo-50/30 transition-colors group/row">
                 {Array.from({ length: COLS_COUNT + extraColumns.length }).map((_, colIndex) => {
                   const isLocked = lockedCells[`${rowIndex}_${colIndex}`];
+                  const isHColumn = colIndex > 5 && colIndex < COLS_COUNT && colIndex % 2 === 1;
+                  const isTeacherReadOnly = !adminUserId && (isLocked || !isHColumn);
+                  const isTotalColumn = colIndex === 26 || colIndex === 27;
+                  const isReadOnly = isTotalColumn || isTeacherReadOnly;
                   return (
                     <td key={colIndex} className="border border-black p-0 h-full relative group/cell">
                       {isEditing ? (
@@ -664,9 +786,10 @@ export default function AcademicWork({ adminUserId, isDistributor }: { adminUser
                           <textarea
                             value={row[colIndex] || ''}
                             onChange={(e) => updateCell(rowIndex, colIndex, e.target.value)}
+                            onKeyDown={handleKeyDown}
                             onClick={() => { if (adminUserId && colIndex === 2) setOpenDropdown({ r: rowIndex, c: colIndex }); }}
-                            readOnly={!adminUserId && (isLocked || colIndex === 2)}
-                            className={`w-full h-full min-h-[44px] bg-transparent text-gray-800 text-sm outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500/50 resize-none transition-all ${(!adminUserId && (isLocked || colIndex === 2)) ? 'bg-gray-100/80 text-gray-500 cursor-not-allowed' : (isLocked && adminUserId ? 'bg-red-50/30 text-gray-600' : '')} ${[0,3,4,5].includes(colIndex) || (colIndex > 5 && colIndex < COLS_COUNT) ? 'text-center' : 'px-2 py-1'}`}
+                            readOnly={isReadOnly}
+                            className={`w-full h-full min-h-[44px] bg-transparent text-gray-800 text-sm outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500/50 resize-none transition-all ${isReadOnly ? 'bg-gray-100/80 text-gray-500 cursor-not-allowed' : (isLocked && adminUserId ? 'bg-red-50/30 text-gray-600' : '')} ${[0,3,4,5].includes(colIndex) || (colIndex > 5 && colIndex < COLS_COUNT) ? 'text-center' : 'px-2 py-1'}`}
                           />
                           {adminUserId && colIndex === 2 && openDropdown?.r === rowIndex && openDropdown?.c === colIndex && (
                               <div className="absolute top-[100%] left-0 z-[60] bg-white border border-gray-200 shadow-xl shadow-indigo-100 rounded-xl p-2 mt-1 max-h-60 overflow-y-auto min-w-[200px]">
@@ -772,6 +895,37 @@ export default function AcademicWork({ adminUserId, isDistributor }: { adminUser
               {isDistributor && <td className="border border-gray-200 bg-gray-50/80"></td>}
               {isEditing && adminUserId && (
                 <td className="border border-gray-200 bg-gray-50/80"></td>
+              )}
+            </tr>
+            <tr className="bg-indigo-50/80 font-bold border-t-[3px] border-black text-gray-900">
+              <td colSpan={6} className="border border-black p-2 text-lg text-center tracking-wider uppercase">
+                HAMMASI
+              </td>
+              {Array.from({ length: COLS_COUNT - 6 + extraColumns.length }).map((_, idx) => {
+                const colIndex = idx + 6;
+                let sum = 0;
+                let hasNumber = false;
+                // Calculate from both semesters
+                const allRows = [...(grid.kuzgi || []), ...(grid.bahorgi || [])];
+                allRows.forEach(row => {
+                  const valStr = row[colIndex];
+                  if (valStr && valStr.trim() !== '') {
+                    const parsed = parseFloat(valStr.replace(/,/g, '.'));
+                    if (!isNaN(parsed)) {
+                      sum += parsed;
+                      hasNumber = true;
+                    }
+                  }
+                });
+                return (
+                  <td key={`grand-total-${colIndex}`} className="border border-black p-2 text-center text-sm md:text-base h-[44px] bg-indigo-100/50">
+                    {hasNumber && sum > 0 ? Number(sum.toFixed(2)) : ''}
+                  </td>
+                );
+              })}
+              {isDistributor && <td className="border border-gray-200 bg-indigo-50/80"></td>}
+              {isEditing && adminUserId && (
+                <td className="border border-gray-200 bg-indigo-50/80"></td>
               )}
             </tr>
           </tbody>

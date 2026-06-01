@@ -242,11 +242,23 @@ export default function MethodicalWork({ adminUserId, isTasdiqlovchi }: { adminU
   };
 
   const updateCellText = (rowIndex: number, colIndex: number, text: string) => {
+    let finalValue = text;
     const currentCell = grid[rowIndex][colIndex];
     if (typeof currentCell === 'object' && currentCell !== null) {
-      updateCell(rowIndex, colIndex, { ...currentCell, text });
+      updateCell(rowIndex, colIndex, { ...currentCell, text: finalValue });
     } else {
-      updateCell(rowIndex, colIndex, text);
+      updateCell(rowIndex, colIndex, finalValue);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const textareas = Array.from(document.querySelectorAll('textarea:not([readOnly])')) as HTMLTextAreaElement[];
+      const index = textareas.indexOf(e.currentTarget);
+      if (index > -1 && index + 1 < textareas.length) {
+        textareas[index + 1].focus();
+      }
     }
   };
 
@@ -343,28 +355,32 @@ export default function MethodicalWork({ adminUserId, isTasdiqlovchi }: { adminU
             </button>
           ) : !isTasdiqlovchi ? (
             <>
-              <button
-                onClick={handleReset}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-red-600 rounded-xl font-semibold hover:bg-red-50 transition-all shadow-sm"
-                title="Jadvalni boshlang'ich holatga qaytarish"
-              >
-                <Trash2 className="w-4 h-4" />
-                Tozalash
-              </button>
-              <button
-                onClick={addRow}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all shadow-sm"
-              >
-                <Rows className="w-4 h-4" />
-                Qator qo'shish
-              </button>
-              <button
-                onClick={addColumn}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all shadow-sm"
-              >
-                <Columns className="w-4 h-4" />
-                Ustun qo'shish
-              </button>
+              {adminUserId && (
+                <>
+                  <button
+                    onClick={handleReset}
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-red-600 rounded-xl font-semibold hover:bg-red-50 transition-all shadow-sm"
+                    title="Jadvalni boshlang'ich holatga qaytarish"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Tozalash
+                  </button>
+                  <button
+                    onClick={addRow}
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all shadow-sm"
+                  >
+                    <Rows className="w-4 h-4" />
+                    Qator qo'shish
+                  </button>
+                  <button
+                    onClick={addColumn}
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all shadow-sm"
+                  >
+                    <Columns className="w-4 h-4" />
+                    Ustun qo'shish
+                  </button>
+                </>
+              )}
               <button
                 onClick={handleCancel}
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition-all shadow-sm"
@@ -503,6 +519,7 @@ export default function MethodicalWork({ adminUserId, isTasdiqlovchi }: { adminU
                           <textarea
                             value={typeof cell === 'string' ? cell : cell.text}
                             onChange={(e) => updateCellText(rowIndex + 2, colIndex, e.target.value)}
+                            onKeyDown={handleKeyDown}
                             rows={1}
                             className="w-full min-h-[40px] px-3 py-2 bg-transparent text-gray-700 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"
                           />
