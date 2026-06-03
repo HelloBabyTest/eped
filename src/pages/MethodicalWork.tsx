@@ -12,6 +12,7 @@ type FileData = {
   text: string;
   file_url: string;
   file_name: string;
+  metadata?: any;
 };
 
 type CellData = string | FileData;
@@ -44,6 +45,7 @@ export default function MethodicalWork({ adminUserId, isTasdiqlovchi }: { adminU
   const [showHistory, setShowHistory] = useState(false);
   const [uploadingCell, setUploadingCell] = useState<{row: number, col: number} | null>(null);
   const [deletingCell, setDeletingCell] = useState<{row: number, col: number} | null>(null);
+  const [uploadModalData, setUploadModalData] = useState<{row: number, col: number} | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -176,7 +178,7 @@ export default function MethodicalWork({ adminUserId, isTasdiqlovchi }: { adminU
     return header.toLowerCase().includes('haqiqat');
   };
 
-  const handleFileUpload = async (rowIndex: number, colIndex: number, file: File) => {
+  const handleFileUpload = async (rowIndex: number, colIndex: number, file: File, metadata: any) => {
     setUploadingCell({ row: rowIndex, col: colIndex });
     setError(null);
 
@@ -204,10 +206,12 @@ export default function MethodicalWork({ adminUserId, isTasdiqlovchi }: { adminU
       const currentText = typeof currentCell === 'string' ? currentCell : currentCell.text;
 
       updateCell(rowIndex, colIndex, {
-        text: currentText,
+        text: metadata?.maqola_mavzusi || currentText,
         file_url: publicUrl,
-        file_name: file.name
+        file_name: file.name,
+        metadata
       });
+      setUploadModalData(null);
     } catch (err: any) {
       console.error('Error uploading file:', err);
       setError('Fayl yuklashda xatolik yuz berdi: ' + err.message);
@@ -572,17 +576,14 @@ export default function MethodicalWork({ adminUserId, isTasdiqlovchi }: { adminU
                               {uploadingCell?.row === rowIndex + 2 && uploadingCell?.col === colIndex ? (
                                 <Loader2 className="w-4 h-4 text-indigo-600 animate-spin" />
                               ) : (
-                                <label className="cursor-pointer p-1 hover:bg-indigo-100 rounded-md transition-colors text-indigo-600">
+                                <button
+                                  type="button"
+                                  onClick={() => setUploadModalData({ row: rowIndex + 2, col: colIndex })}
+                                  className="cursor-pointer p-1 hover:bg-indigo-100 rounded-md transition-colors text-indigo-600 flex items-center justify-center"
+                                  title="Ma'lumot va fayl yuklash"
+                                >
                                   <Paperclip className="w-4 h-4" />
-                                  <input 
-                                    type="file" 
-                                    className="hidden" 
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0];
-                                      if (file) handleFileUpload(rowIndex + 2, colIndex, file);
-                                    }}
-                                  />
-                                </label>
+                                </button>
                               )}
                               {typeof cell === 'object' && cell !== null && (
                                 <div className="flex items-center gap-1">
@@ -691,6 +692,99 @@ export default function MethodicalWork({ adminUserId, isTasdiqlovchi }: { adminU
                   ))
                 )}
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {uploadModalData && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-2xl border border-gray-100 flex flex-col max-h-[90vh]"
+            >
+              <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
+                <h3 className="font-bold text-lg text-gray-900">Ma'lumot va fayl yuklash</h3>
+                <button onClick={() => setUploadModalData(null)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const form = e.target as HTMLFormElement;
+                  const data = new FormData(form);
+                  const file = data.get('fayl') as File;
+                  const meta = {
+                    maqola_mavzusi: data.get('maqola_mavzusi'),
+                    mualliflar_soni: data.get('mualliflar_soni'),
+                    hammualliflar: data.get('hammualliflar'),
+                    jurnal_nomi: data.get('jurnal_nomi'),
+                    chop_etilgan_sana: data.get('chop_etilgan_sana'),
+                    maqola_betlari: data.get('maqola_betlari'),
+                    internet_manzili: data.get('internet_manzili'),
+                  };
+                  if (file && file.size > 0) {
+                     handleFileUpload(uploadModalData.row, uploadModalData.col, file, meta);
+                  } else {
+                     alert("Iltimos fayl tanlang!");
+                  }
+                }}
+                className="p-6 overflow-y-auto space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Maqola mavzusi *</label>
+                  <input required name="maqola_mavzusi" type="text" className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Mualliflar soni</label>
+                    <input name="mualliflar_soni" type="number" defaultValue={1} min={1} className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Mualliflar</label>
+                    <input name="hammualliflar" type="text" placeholder="F.I.SH." className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Jurnal (yoki to'plam) nomi va soni</label>
+                  <input name="jurnal_nomi" type="text" className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Chop etilgan sana</label>
+                    <input name="chop_etilgan_sana" type="date" className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Maqola betlari</label>
+                    <input name="maqola_betlari" type="text" placeholder="Masalan: 12-15" className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Maqolaning Internet sahifasi manzili</label>
+                  <input name="internet_manzili" type="url" placeholder="https://" className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Asoslovchi hujjat *</label>
+                  <input required name="fayl" type="file" accept=".pdf,.doc,.docx" className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                  <p className="text-xs text-gray-500 mt-1">Faqat .pdf, .doc, .docx formatlari</p>
+                </div>
+
+                <div className="pt-4 border-t border-gray-100 flex justify-end">
+                  <button type="submit" disabled={uploadingCell !== null} className="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center">
+                    {uploadingCell !== null ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
+                    Saqlash
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}

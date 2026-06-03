@@ -1,0 +1,45 @@
+E-PEDAGOG LOYIHASINING PAPKA VA FAYLLAR ARXITEKTURASI 
+
+Ushbu hujjat E-Pedagog tizimining tuzilishi, har bir papka va muhim faylning vazifasini to'liq yoritish uchun tayyorlandi.
+
+1. ASOSIY ROOT FAYLLARI (Infratuzilma)
+--------------------------------------
+* package.json: Loyiha bog'liqliklari (React, Tailwind, Supabase va boshqalar) va ishga tushirish (build) buyruqlari saqlanadigan asosiy reyestr.
+* vite.config.ts: Dastur kodlarini brauzer uchun tezkor yig'ib (compilation) va qadoqlab (bundle) beruvchi lokal server konfiguratsiyasi.
+* tailwind.config.js: Loyihaning barcha rang, shrift va dizayn komponentlarining global moslamalari turuvchi fayl.
+
+2. /src LOKATSIYASI (Source - Dastur mantiqiyni bosh qismi)
+------------------------------------------------------------
+* main.tsx: Dastur React Framework orqali ishga tushiradigan eng asosiy kirish nuqtasi. Virtual DOM shundan boshlab ishlaydi.
+* App.tsx: Barcha web url marshrutlari (routelar) qayerga yo'naltirilishini ko'rsatib turadigan fayl. Masalan u "/login" url manzilini login sahifasiga buraladi.
+* index.css: Global stil, Tailwind CSS sozlamalarining integratsiyasi turuvchi asosiy uslub fayli.
+
+3. /src/pages/ (Sahifalar papkasi)
+----------------------------------
+Har bir oyna o'zining mustaqil ".tsx" faylida mujassamlangan. 
+* LandingPage.tsx - Dastur imkoniyatlari tanishtiriluvchi bosh reklama oynasi.
+* LoginPage.tsx va RegisterPage.tsx - Avtorizatsiya: Kirish va yangi akkaunt ochish.
+* PedagogDashboard.tsx - Pedagoglar uchun reyting grafiklari pleyeri va asosiy paneli.
+* AdminDashboard.tsx, TasdiqlovchiDashboard.tsx - Kafedra mudirlari, rahbariyat o'qituvchilarni tekshiradigan panellar.
+* AcademicWork.tsx - (O'quv ishlari) Semestr bo'yicha dars soatlarini guruhlar kesimida yozuvchi elektron jadvali.
+* MethodicalWork.tsx - (O'quv-uslubiy ishlar) Qilinayotgan ilmiy maqolalar to'plamini qayd qilib uning sirtqi rasmiy hujjatlarini PDF sifatida tizimga kiritish joyi.
+* ScientificWork.tsx - (Ilmiy ishlar) Maqolalarni va konferensiya materiallari bazasi. 
+* MentorWork.tsx - (Ustoz-shogird) Talabalarga ilmiy rahbarlik va ma'naviy ishlar kiritadigan elektron oyna.
+* YearlyWork.tsx - (Yil sarhisobi) Tizimdagi to'rt yo'nalishdagi barcha jadvallarni bitta qog'oz formatiga tayyorlab generatsiya qilib PDF chiqaruvchi modul. 
+* GlobalHistory.tsx - Dasturda kim, qachon qanday katakni ballini o'zgartirganini 100% monitor qiluvchi tizimli tarix. Admin yoki Kafedra mudirlari shu yerdan barcha nosozliklarni aniqlaydi.
+* UserChat.tsx - O'qituvchilari tushunmagan savollari yuzasidan bevosita Admin yoki bo'lim xodimlari orasidagi Onlayn Chat moduli. 
+* PersonalNotes.tsx - O'qituvchining shaxsiy eslatmalar paneli, doskaga o'xshab bajariladigan ishlar planini ko'rib chiqish mumkin (TODO list).
+* Norms.tsx - Kafedrada tasdiqlangan hujjat namunalari yoki me'yoriy yillik yuklama jadvali mezonlarini o'qish oynasi. 
+
+4. /src/components/ (Global komponentlar papkasi)
+-------------------------------------------------
+Dasturda qayta va qayta chaqiriladigan mantiqiy interfeys elementlari (qoliplar) saqlanadi. 
+* DashboardLayout.tsx - Foydalanuvchi tizimga kirgan vaqtdan ishlay boshlaydigan yirik qolip hisoblanadi. Unda asosan Sidebar (Chap qatordagi menyu) va uning tepa Header paneli yozilgan.
+
+5. /src/lib/ (Xizmatlar papkasi)
+---------------------------------
+* supabase.ts - Backend arxitekturasi. Google Firebase analogiga o'xshash Supabase serveriga ulash API va Maxfiy (SECURE) kalitlari turuvchi yordamchi konfiguratsiya. 
+
+XULOSA
+-------
+Dasturning bu darajada Modulli papkalari nafaqat funksionallikni oshiradi, balki loyihani juda yengil bo'lishini va ilova tezkor (single page formatida reload(yangilanmagan) holda) ishlashini ta'minlaydi. Hujjat bir blokdagi o'zgarishlar boshqa bir bloklarga umuman xalaqit bermaydigan darajada terilgan.

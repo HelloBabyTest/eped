@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Papka va Fayllar Arxitekturasi</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1f2937; background-color: #f3f4f6; margin: 0; padding: 0; }
+        .container { max-width: 900px; margin: 40px auto; background: #ffffff; padding: 40px; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-top: 4px solid #4f46e5; }
+        h1 { color: #111827; font-size: 28px; text-align: center; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; font-weight: 800; }
+        h2 { color: #4338ca; margin-top: 32px; font-size: 20px; border-bottom: 1px dashed #c7d2fe; padding-bottom: 8px;}
+        p, li { font-size: 15px; color: #4b5563; }
+        ul { margin-bottom: 20px; padding-left: 20px; list-style-type: none; }
+        li { margin-bottom: 12px; position: relative; padding-left: 20px; }
+        li::before { content: "📁"; position: absolute; left: -5px; top: 0; }
+        li.file::before { content: "📄"; position: absolute; left: -5px; top: 2px; font-size: 14px;}
+        .folder { font-weight: bold; color: #374151; background: #f3f4f6; padding: 4px 8px; border-radius: 6px; border: 1px solid #e5e7eb;}
+        .highlight { color: #2563eb; font-weight: 600; font-family: monospace;}
+        .note { background-color: #ecfdf5; border-left: 4px solid #10b981; padding: 16px; margin: 24px 0; border-radius: 4px; color: #065f46; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>E-PEDAGOG Loyihasining Papka va Fayllar Strukturasi</h1>
+    <p style="text-align: center;">Dastur ko'lami, uning komponentlarga bo'linishi va ularning loyihadagi o'rni bo'yicha to'liq qo'llanma.</p>
+    
+    <div class="note">
+        <strong>Eslatma:</strong> Dastur qat'iy "Single Page Application (SPA)" ya'ni yagona sahifali modul standartida yozilgan. Kod bo'laklarga ajratilganligi kelajakda dasturni 10 barobargacha bemalol kengaytirish (scale) imkonini beradi.
+    </div>
+
+    <h2>1. Root (Bosh) Konfiguratsiyalar</h2>
+    <ul>
+        <li class="file"><span class="highlight">package.json</span> — Loyihaga ulangan uchinchi tomon komponentlari (React, Tailwind) manzillari va skriptlari saqlanadi.</li>
+        <li class="file"><span class="highlight">vite.config.ts</span> — Lokal serverni 3000-portga bog'laydigan va loyihani brauzerga o'qib beruvchi tezkor Build quroli.</li>
+        <li class="file"><span class="highlight">tailwind.config.js</span> — Loyihada ishlatilgan barcha ranglar dizayni uchun global CSS Frameowrk konfiguratsiyasi.</li>
+    </ul>
+
+    <h2>2. <span class="folder">/src</span> (Source Asosiy mantiqiy papka)</h2>
+    <p>Barcha interfeys va biznes mantiq kodlari shu papka atrofida birlashadi.</p>
+    <ul>
+        <li class="file"><span class="highlight">main.tsx</span> — React ilovasini ishga tushirish (Mounting) amaliyoti va asosiy Dom elementi ulanuvchi fayl.</li>
+        <li class="file"><span class="highlight">App.tsx</span> — Route (yo'nalishlar) markazi. Saytda bosilgan URL manzilga qarab qaysi sahifasiga o'tish ro'yxati aynan shu joyda yozilgan.</li>
+        <li class="file"><span class="highlight">index.css</span> — Global stillar (Tailwind ulanish nuqtasi).</li>
+    </ul>
+
+    <h2>3. <span class="folder">/src/pages</span> (Sahifalar papkasi)</h2>
+    <p>Har bir imkoniyat va alohida sahifa (oyna) uchun maxsus mustaqil modullar:</p>
+    <ul>
+        <li class="file"><span class="highlight">LandingPage.tsx</span> — Kirmasdan oldingi promo reklama sayti (Ochilishi sahifasi).</li>
+        <li class="file"><span class="highlight">LoginPage.tsx</span> / <span class="highlight">RegisterPage.tsx</span> — Tizimga xavfsiz avtorizatsiya va profil ochish.</li>
+        <li class="file"><span class="highlight">PedagogDashboard.tsx</span> — O'qituvchining grafiklarga boy ishchi paneli.</li>
+        <li class="file"><span class="highlight">AdminDashboard.tsx</span> / <span class="highlight">TasdiqlovchiDashboard.tsx</span> — Mudir, tekshiruvchi va Administratorlar uchun statistika va buyruqlar paneli.</li>
+        <li class="file"><span class="highlight">AcademicWork.tsx</span> — (O'quv ishlari) Akademik yillik dars soatlar elektron jurnali.</li>
+        <li class="file"><span class="highlight">MethodicalWork.tsx</span> — (O'quv-uslubiy ishlar) Yutilgan nashrlar arxivini biriktirish bo'limi.</li>
+        <li class="file"><span class="highlight">ScientificWork.tsx</span> — (Ilmiy ishlar) Maqola, tezis ko'rgazmalar dalillarini pdf fayli bilan yuklash jadvali.</li>
+        <li class="file"><span class="highlight">MentorWork.tsx</span> — ("Ustoz-shogird" ishlari) Talabalar amaliyoti holatni yuritish.</li>
+        <li class="file"><span class="highlight">YearlyWork.tsx</span> — Yillik (Yig'ma) hisobot generatsiya qilinib uning barchasini PDF hujjat qiluvchi eng yakuniy pechat modulu.</li>
+        <li class="file"><span class="highlight">GlobalHistory.tsx</span> — Jadvallarda o'qituvchi tomonidan qilingan sun'iy yozuv va o'zgarishlar (firibgarliklar) ni aniqlash bo'yicha tarix auditi (Logs). </li>
+        <li class="file"><span class="highlight">PersonalNotes.tsx</span> — (Qaydlar) Foydalanuvchilar o'qish rejalari, muammolarni bloknom orqali qisqa matnlarda yuritadi (TODO).</li>
+        <li class="file"><span class="highlight">UserChat.tsx</span> — Admin (Tizim) hamda bo'lim va o'qituvchilar o'rtasida muammo bo'lsa zudlik bilan chat qilib yozishish funksiyasi.</li>
+        <li class="file"><span class="highlight">Norms.tsx</span> — Nizomlar, baho standartlari ko'rsatilgan statik ko'rsatmalar moduli.</li>
+    </ul>
+
+    <h2>4. <span class="folder">/src/components</span> (Umumiy UI shablonlari)</h2>
+    <ul>
+        <li class="file"><span class="highlight">DashboardLayout.tsx</span> — Bu modul tizim interfeysi asosini beradi. Har bir yangi sahifa bitta fondda, chap tomongi Sidebar va Navbar bilan ochilishini ta'minlovchi asosi hisoblanadi.</li>
+    </ul>
+
+    <h2>5. <span class="folder">/src/lib</span> (Yordamchi Kutubxona funksiyalari)</h2>
+    <ul>
+        <li class="file"><span class="highlight">supabase.ts</span> — Backend orqa foni vazifasini bajaruvchi bulut platformasiga so'rov (request) jo'natish xavfsizlik o'zagidir. Barcha yozilgan yillik ballar, maqola ismlari, pdf fayllari PostrgreSQL relatsiyaviy bazasiga kiritish va o'qish imkoni faqat shu fayldagi bog'lam ishlarigagina bog'liq.</li>
+    </ul>
+    
+    <div style="margin-top: 30px; font-size: 14px; text-align: center; color: #9ca3af;">Ushbu hujjat, mudofaa va loyiha muhokamasida dastur strukturasi bo'yicha savollarga javob berishda yaqotadi.</div>
+</div>
+
+</body>
+</html>
