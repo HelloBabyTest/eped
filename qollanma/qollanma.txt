@@ -1,0 +1,44 @@
+E-PEDAGOG DASTURI BO'YICHA TO'LIQ QO'LLANMA VA HIMOYA UCHUN MA'LUMOTNOMA
+
+1. DASTURNING UMUMIY MAQSADI
+E-Pedagog — bu oliy ta'lim muassasalari professor-o'qituvchilarining yillik o'quv, o'quv-uslubiy, ilmiy-tadqiqot va "ustoz-shogird" ishlarini avtomatlashtirilgan tarzda hisobga olish, tasdiqlash va nazorat qilish maqsadida ishlab chiqilgan raqamli platforma.
+Ushbu tizim qog'ozbozlikni kamaytiradi, o'qituvchi faoliyati samaradorligini oshiradi va rahbariyat (mudir, o'quv bo'limi) uchun shaffof monitoring muhitini taqdim etadi.
+
+2. QO'LLANILGAN DASTURLASH TILLARI VA TEXNOLOGIYALAR
+Dastur eng zamonaviy Frontend texnologiyalari va Cloud ma'lumotlar bazasi asosida qurilgan:
+- Dasturlash tillari: TypeScript, JavaScript, HTML5, CSS3
+- Frontend Framework: React.js (Vite tezkor yig'uvchisi yordamida)
+- Stil yozish (CSS Framework): Tailwind CSS (barcha responsive va zamonaviy dizaynlar uchun)
+- Backend va Ma'lumotlar bazasi (BaaS): Supabase (PostgreSQL ma'lumotlar bazasi, Authentication va Cloud Storage)
+- Animatsiyalar: Framer Motion (sahifalardagi ravon o'tishlar va harakatlar)
+- Ikonkalar: Lucide React
+- Marshrutlash (Routing): React Router DOM
+
+3. ASOSIY MODULLAR VA PAPKALAR TUZILMASI
+- /src/pages/ - Asosiy sahifalar joylashgan (AdminDashboard, PedagogDashboard, AcademicWork va h.k.)
+- /src/components/ - Qayta ishlatiluvchi UI komponentlar (Sidebar, Modallar, Grafiklar)
+- /src/lib/ - Yordamchi kutubxonalar va Supabase ulanish sozlamalari
+- /src/contexts/ - Dastur global holati, masalan til (LanguageContext) sozlamalari 
+
+4. DASTURNING ASOSIY FUNKSIYALARI VA IMKONIYATLARI
+- Rolga asoslangan avtorizatsiya: Tizimda 4 xil rol mavjud:
+  1) Pedagog (Ma'lumot kirituvchi)
+  2) Tasdiqlovchi (Kafedra mudiri - ma'lumotlarni tasdiqlash)
+  3) Tahrirlovchi (O'quv bo'limi - tekshirish)
+  4) Admin (Tizimni to'liq nazorat qiluvchi)
+- O'quv ishlari (Academic Work) - semestrlar bo'yicha o'quv soatlarini hisoblash va boshqarish.
+- O'quv-uslubiy va Ilmiy ishlar - nashr qilingan maqolalar, o'quv qo'llanmalar va sertifikatlarni tizimga biriktirish va saqlash.
+- Fayllar yuklash - hujjatlarni bulutli xotiraga (Supabase Storage) yuklash.
+- Hisobotlar va eksport - Barcha kiritilgan o'quv yuklamalarini Excel va PDF formatda yuklab olish jadvallari (XLSX va jsPDF).
+- Real vaqtda Chat (User Chat) - muammolar bo'yicha to'g'ridan-to'g'ri admin va professor-o'qituvchilar o'rtasidagi aloqa.
+- O'zgarishlar tarixi (History Logs) - kiritilgan baho yoki ballarni kim va qachon o'zgartirganligini kuzatish imkoniyati.
+
+5. FOYDALANUVCHI DASTURDAN QANDAY FOYDALANADI? (User Flow)
+1. Tizimga kirish: Foydalanuvchi elektron pochta va parol yordamida ro'yxatdan o'tadi va tizimga kiradi.
+2. Ishchi panel (Dashboard): Tizim o'qituvchini o'z sahifasiga yo'naltiradi, u yerdan umumiy ko'rsatkichlarni ko'rishi mumkin.
+3. Ma'lumot kiritish: Chap paneldagi menyu orqali tegishli bo'limga (masalan, Ilmiy ishlar) o'tib jadvalni to'ldiradi va fayl biriktiradi.
+4. Saqlash: "Saqlash" tugmasi orqali ma'lumot bazaga (PostgreSQL) yuboriladi.
+5. Tasdiqlash jarayoni: Kiritilgan ma'lumot Kafedra mudiri panelida ko'rinadi va mudir buni to'g'riligini tekshirib tasdiqlab beradi.
+6. Chop etish: Yil yakunida o'qituvchi barcha yuklamalarini PDF / qog'oz shaklida chop etib oladi.
+
+Ushbu qisqacha qo'llanma loyiha himoyasi paytida sizga kompas bo'lib xizmat qiladi!

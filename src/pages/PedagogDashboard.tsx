@@ -67,7 +67,7 @@ export default function PedagogDashboard() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-full mx-auto space-y-8">
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Professor-o'qituvchi Boshqaruv Paneli</h1>

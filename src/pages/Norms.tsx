@@ -239,7 +239,7 @@ export default function Norms({ adminUserId }: { adminUserId?: string }) {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-500 pb-12">
+    <div className="max-w-full mx-auto space-y-8 animate-in fade-in duration-500 pb-12">
       <div className="mb-6 border-b border-gray-200 dark:border-gray-800 pb-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-3">
           <div className="flex items-center gap-3">

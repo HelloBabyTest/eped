@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Save, Loader2, AlertCircle, 
   Trash2, Rows, CheckCircle2, X,
-  Pencil, RotateCcw, Columns, Lock, Unlock, Printer, FileUp
+  Pencil, RotateCcw, Columns, Lock, Unlock, Printer, FileUp, History
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -19,6 +19,8 @@ type SemesterData = {
   bahorgiLocked?: Record<string, boolean>;
   kuzgiExtraCols?: string[];
   bahorgiExtraCols?: string[];
+  teacherAllowsEdit?: boolean;
+  historyLogs?: { date: string, semester: string, row: number, col: number, oldVal: string, newVal: string }[];
 };
 
 const initialData: SemesterData = { 
@@ -27,7 +29,9 @@ const initialData: SemesterData = {
   kuzgiLocked: {},
   bahorgiLocked: {},
   kuzgiExtraCols: [],
-  bahorgiExtraCols: []
+  bahorgiExtraCols: [],
+  teacherAllowsEdit: false,
+  historyLogs: []
 };
 
 const fixData = (data: any[]): string[][] => {
@@ -84,6 +88,7 @@ export default function AcademicWork({ adminUserId, isDistributor }: { adminUser
   
   const [distributeModalOpen, setDistributeModalOpen] = useState<number | null>(null);
   const [distributeTeachers, setDistributeTeachers] = useState<{id: string, full_name: string}[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   const [searchTeacher, setSearchTeacher] = useState('');
 
   useEffect(() => {
@@ -174,6 +179,11 @@ export default function AcademicWork({ adminUserId, isDistributor }: { adminUser
   }, [fetchData]);
 
   const handleSave = async () => {
+    if (JSON.stringify(grid) === JSON.stringify(savedData)) {
+      setIsEditing(false);
+      return;
+    }
+
     setSaving(true);
     setError(null);
     setSuccess(false);
@@ -307,7 +317,8 @@ export default function AcademicWork({ adminUserId, isDistributor }: { adminUser
     if (!adminUserId && colIndex === 2) return;
     const lockKey = `${activeSemester}Locked` as 'kuzgiLocked' | 'bahorgiLocked';
     const isLocked = grid[lockKey]?.[`${rowIndex}_${colIndex}`];
-    if (!adminUserId && isLocked) return;
+    const isHColumn = colIndex > 5 && colIndex < COLS_COUNT && colIndex % 2 === 1;
+    if (!adminUserId && isLocked && !isHColumn) return;
 
     let finalValue = value;
     if (colIndex > 5 && colIndex < COLS_COUNT) {
@@ -328,6 +339,8 @@ export default function AcademicWork({ adminUserId, isDistributor }: { adminUser
     setGrid(prev => {
       const currentSemesterGrid = [...prev[activeSemester]];
       currentSemesterGrid[rowIndex] = [...currentSemesterGrid[rowIndex]];
+      
+      const oldVal = currentSemesterGrid[rowIndex][colIndex] || '';
       currentSemesterGrid[rowIndex][colIndex] = finalValue;
       
       // Automatically calculate "Hammasi" (Total) columns
@@ -344,9 +357,22 @@ export default function AcademicWork({ adminUserId, isDistributor }: { adminUser
         currentSemesterGrid[rowIndex][27] = sumH > 0 ? sumH.toString() : '';
       }
 
+      let newLogs = prev.historyLogs || [];
+      if (!adminUserId && isHColumn && oldVal !== finalValue) {
+        newLogs = [{
+          date: new Date().toISOString(),
+          semester: activeSemester,
+          row: rowIndex,
+          col: colIndex,
+          oldVal,
+          newVal: finalValue
+        }, ...newLogs].slice(0, 50);
+      }
+
       return {
         ...prev,
-        [activeSemester]: currentSemesterGrid
+        [activeSemester]: currentSemesterGrid,
+        historyLogs: newLogs
       };
     });
   };
@@ -552,6 +578,15 @@ export default function AcademicWork({ adminUserId, isDistributor }: { adminUser
               />
             </label>
           )}
+          {!adminUserId && (
+            <button
+              onClick={() => setShowHistory(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all shadow-sm print:hidden"
+            >
+              <History className="w-4 h-4" />
+              Tarix
+            </button>
+          )}
           {!isEditing && (
             <>
               <button
@@ -573,6 +608,16 @@ export default function AcademicWork({ adminUserId, isDistributor }: { adminUser
           
           {isEditing && (
             <>
+              {!adminUserId && (
+                <button
+                  onClick={() => setGrid(prev => ({ ...prev, teacherAllowsEdit: !prev.teacherAllowsEdit }))}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all shadow-sm print:hidden ${grid.teacherAllowsEdit ? 'bg-indigo-50 border border-indigo-200 text-indigo-700' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                  title="Tahrirlovchiga haqiqat ustunini tahrirlashga ruxsat berish"
+                >
+                  {grid.teacherAllowsEdit ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                  {grid.teacherAllowsEdit ? "Muharrirga ruxsat" : "Tahrir yopiq"}
+                </button>
+              )}
               {adminUserId && (
                 <>
                   <button
@@ -776,9 +821,10 @@ export default function AcademicWork({ adminUserId, isDistributor }: { adminUser
                 {Array.from({ length: COLS_COUNT + extraColumns.length }).map((_, colIndex) => {
                   const isLocked = lockedCells[`${rowIndex}_${colIndex}`];
                   const isHColumn = colIndex > 5 && colIndex < COLS_COUNT && colIndex % 2 === 1;
-                  const isTeacherReadOnly = !adminUserId && (isLocked || !isHColumn);
+                  const isTeacherReadOnly = !adminUserId && !isHColumn;
+                  const isAdminReadOnly = !!adminUserId && isHColumn && !grid.teacherAllowsEdit;
                   const isTotalColumn = colIndex === 26 || colIndex === 27;
-                  const isReadOnly = isTotalColumn || isTeacherReadOnly;
+                  const isReadOnly = isTotalColumn || isTeacherReadOnly || isAdminReadOnly;
                   return (
                     <td key={colIndex} className="border border-black p-0 h-full relative group/cell">
                       {isEditing ? (
@@ -992,6 +1038,56 @@ export default function AcademicWork({ adminUserId, isDistributor }: { adminUser
                     <div className="text-center p-4 text-gray-500 text-sm">O'qituvchilar topilmadi</div>
                   )}
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+        
+        {showHistory && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-lg border border-gray-100 flex flex-col max-h-[80vh]"
+            >
+              <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
+                <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
+                  <History className="w-5 h-5 text-indigo-600" />
+                  O'zgarishlar tarixi
+                </h3>
+                <button onClick={() => setShowHistory(false)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto space-y-3">
+                {(!grid.historyLogs || grid.historyLogs.length === 0) ? (
+                  <div className="text-center p-8 text-gray-400 italic">O'zgarishlar tarixi bo'sh</div>
+                ) : (
+                  grid.historyLogs.map((log, idx) => {
+                     // Find column name
+                     let colName = "Noma'lum ustun";
+                     if (log.col > 5 && log.col < 26) {
+                        colName = 'Haqiqat soati';
+                     }
+                     return (
+                       <div key={idx} className="p-4 border border-gray-100 rounded-xl bg-gray-50 flex flex-col gap-2 relative">
+                         <div className="flex justify-between items-start">
+                            <span className="text-xs font-bold text-gray-500 bg-white px-2 py-1 rounded shadow-sm">Qator: {log.row + 1}</span>
+                            <span className="text-xs font-semibold text-gray-400">{new Date(log.date).toLocaleString()}</span>
+                         </div>
+                         <div className="text-sm text-gray-700">
+                            <strong>{log.semester === 'kuzgi' ? 'Kuzgi' : 'Bahorgi'} semester:</strong> {colName} qismi o'zgartirildi.
+                         </div>
+                         <div className="flex items-center gap-3 mt-1">
+                            <span className="px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-bold line-through">{log.oldVal || '0'}</span>
+                            <span className="text-gray-400 text-xs">→</span>
+                            <span className="px-3 py-1 bg-green-100 text-green-700 rounded text-xs font-bold">{log.newVal || '0'}</span>
+                         </div>
+                       </div>
+                     );
+                  })
+                )}
               </div>
             </motion.div>
           </div>

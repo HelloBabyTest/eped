@@ -83,7 +83,7 @@ export default function TasdiqlovchiDashboard() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4 mt-16 pb-24">
+    <div className="max-w-full mx-auto py-8 px-4 mt-16 pb-24">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
         <div>
           <h1 className="text-4xl font-black text-gray-900 tracking-tight text-center md:text-left">Tasdiqlovchi paneli</h1>

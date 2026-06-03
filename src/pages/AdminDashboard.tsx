@@ -275,7 +275,7 @@ export default function AdminDashboardPage() {
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -20 }}
-        className="max-w-7xl mx-auto py-8 px-4 mt-16 pb-24"
+        className="max-w-full mx-auto py-8 px-4 mt-16 pb-24"
       >
         <button
           onClick={() => setSelectedUser(null)}
@@ -360,7 +360,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4 mt-16 pb-24">
+    <div className="max-w-full mx-auto py-8 px-4 mt-16 pb-24">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
         <div>
           <h1 className="text-4xl font-black text-gray-900 tracking-tight">Umumiy tizim nazorati</h1>

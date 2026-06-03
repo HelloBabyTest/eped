@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Plus, Save, Loader2, AlertCircle, 
   Trash2, Columns, Rows, CheckCircle2, X,
-  Pencil, RotateCcw, Paperclip, ExternalLink, FileText, Printer
+  Pencil, RotateCcw, Paperclip, ExternalLink, FileText, Printer, History
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -35,11 +35,13 @@ export default function MentorWork({ adminUserId, isTasdiqlovchi }: { adminUserI
     return null;
   })();
 
-  const [grid, setGrid] = useState<CellData[][]>(cachedData || DEFAULT_TEMPLATE);
-  const [savedData, setSavedData] = useState<CellData[][]>(cachedData || DEFAULT_TEMPLATE);
+  const [grid, setGrid] = useState<CellData[][]>(cachedData?.grid || cachedData || DEFAULT_TEMPLATE);
+  const [savedData, setSavedData] = useState<CellData[][]>(cachedData?.grid || cachedData || DEFAULT_TEMPLATE);
+  const [historyLogs, setHistoryLogs] = useState<any[]>(cachedData?.historyLogs || []);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(!cachedData);
   const [saving, setSaving] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [uploadingCell, setUploadingCell] = useState<{row: number, col: number} | null>(null);
   const [deletingCell, setDeletingCell] = useState<{row: number, col: number} | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -85,16 +87,26 @@ export default function MentorWork({ adminUserId, isTasdiqlovchi }: { adminUserI
       if (error) throw error;
       
       if (data?.table_data) {
-        const tableData = data.table_data as CellData[][];
-        setGrid(tableData);
-        setSavedData(tableData);
+        const rawData = data.table_data as any;
+        let loadedGrid = DEFAULT_TEMPLATE;
+        let loadedLogs: any[] = [];
+        if (Array.isArray(rawData)) {
+          loadedGrid = rawData;
+        } else {
+          loadedGrid = rawData.grid || DEFAULT_TEMPLATE;
+          loadedLogs = rawData.historyLogs || [];
+        }
+        setGrid(loadedGrid);
+        setSavedData(loadedGrid);
+        setHistoryLogs(loadedLogs);
         setIsEditing(false);
-        localStorage.setItem('cache_mentor_work_' + targetUserId, JSON.stringify(tableData));
+        localStorage.setItem('cache_mentor_work_' + targetUserId, JSON.stringify({ grid: loadedGrid, historyLogs: loadedLogs }));
       } else {
         setGrid(DEFAULT_TEMPLATE);
         setSavedData(DEFAULT_TEMPLATE);
+        setHistoryLogs([]);
         setIsEditing(true);
-        localStorage.setItem('cache_mentor_work_' + targetUserId, JSON.stringify(DEFAULT_TEMPLATE));
+        localStorage.setItem('cache_mentor_work_' + targetUserId, JSON.stringify({ grid: DEFAULT_TEMPLATE, historyLogs: [] }));
       }
     } catch (err: any) {
       console.error('Error fetching mentor work:', err);
@@ -109,6 +121,11 @@ export default function MentorWork({ adminUserId, isTasdiqlovchi }: { adminUserI
   }, [fetchData]);
 
   const handleSave = async () => {
+    if (JSON.stringify(grid) === JSON.stringify(savedData)) {
+      setIsEditing(false);
+      return;
+    }
+
     setSaving(true);
     setError(null);
     setSuccess(false);
@@ -123,7 +140,7 @@ export default function MentorWork({ adminUserId, isTasdiqlovchi }: { adminUserI
         .from('mentor_works')
         .upsert({
           user_id: targetUserId,
-          table_data: grid,
+          table_data: { grid, historyLogs },
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
 
@@ -131,7 +148,7 @@ export default function MentorWork({ adminUserId, isTasdiqlovchi }: { adminUserI
       
       setSavedData(grid);
       setIsEditing(false);
-      localStorage.setItem('cache_mentor_work_' + targetUserId, JSON.stringify(grid));
+      localStorage.setItem('cache_mentor_work_' + targetUserId, JSON.stringify({ grid, historyLogs }));
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
@@ -244,10 +261,28 @@ export default function MentorWork({ adminUserId, isTasdiqlovchi }: { adminUserI
   const updateCellText = (rowIndex: number, colIndex: number, text: string) => {
     let finalValue = text;
     const currentCell = grid[rowIndex][colIndex];
+    const oldVal = typeof currentCell === 'object' ? currentCell.text : currentCell;
+    const newGrid = [...grid];
+    newGrid[rowIndex] = [...newGrid[rowIndex]];
+
     if (typeof currentCell === 'object' && currentCell !== null) {
-      updateCell(rowIndex, colIndex, { ...currentCell, text: finalValue });
+      newGrid[rowIndex][colIndex] = { ...currentCell, text: finalValue };
     } else {
-      updateCell(rowIndex, colIndex, finalValue);
+      newGrid[rowIndex][colIndex] = finalValue;
+    }
+    setGrid(newGrid);
+
+    if (!adminUserId && isHaqiqatColumn(colIndex) && oldVal !== finalValue) {
+      setHistoryLogs(prev => [
+        {
+          date: new Date().toISOString(),
+          row: rowIndex - 2, // exclude headers
+          col: colIndex,
+          oldVal,
+          newVal: finalValue
+        },
+        ...prev
+      ].slice(0, 50));
     }
   };
 
@@ -316,6 +351,15 @@ export default function MentorWork({ adminUserId, isTasdiqlovchi }: { adminUserI
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
+          {!adminUserId && (
+            <button
+              onClick={() => setShowHistory(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all shadow-sm print:hidden"
+            >
+              <History className="w-4 h-4" />
+              Tarix
+            </button>
+          )}
           {!isEditing && (
             <button
               onClick={() => window.print()}
@@ -606,6 +650,51 @@ export default function MentorWork({ adminUserId, isTasdiqlovchi }: { adminUserI
         <AlertCircle className="w-4 h-4" />
         <span>Jadval katakchalarini to'g'ridan-to'g'ri tahrirlashingiz mumkin. O'zgarishlarni saqlashni unutmang.</span>
       </div>
+
+      <AnimatePresence>
+        {showHistory && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-lg border border-gray-100 flex flex-col max-h-[80vh]"
+            >
+              <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
+                <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
+                  <History className="w-5 h-5 text-indigo-600" />
+                  O'zgarishlar tarixi
+                </h3>
+                <button onClick={() => setShowHistory(false)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto space-y-3">
+                {(!historyLogs || historyLogs.length === 0) ? (
+                  <div className="text-center p-8 text-gray-400 italic">O'zgarishlar tarixi bo'sh</div>
+                ) : (
+                  historyLogs.map((log, idx) => (
+                    <div key={idx} className="p-4 border border-gray-100 rounded-xl bg-gray-50 flex flex-col gap-2 relative">
+                      <div className="flex justify-between items-start">
+                        <span className="text-xs font-bold text-gray-500 bg-white px-2 py-1 rounded shadow-sm">Qator: {log.row + 1}</span>
+                        <span className="text-xs font-semibold text-gray-400">{new Date(log.date).toLocaleString()}</span>
+                      </div>
+                      <div className="text-sm text-gray-700">
+                        Ustun o'zgartirildi (Haqiqatda).
+                      </div>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-bold line-through">{log.oldVal || '0'}</span>
+                        <span className="text-gray-400 text-xs">→</span>
+                        <span className="px-3 py-1 bg-green-100 text-green-700 rounded text-xs font-bold">{log.newVal || '0'}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

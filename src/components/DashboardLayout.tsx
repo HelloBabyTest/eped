@@ -21,26 +21,29 @@ interface SidebarItemProps {
   icon: React.ElementType;
   label: string;
   active: boolean;
+  collapsed?: boolean;
   onClick?: () => void;
 }
 
-const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon: Icon, label, active, onClick }) => (
+const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon: Icon, label, active, collapsed, onClick }) => (
   <Link
     to={to}
     onClick={onClick}
+    title={collapsed ? label : undefined}
     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
       active 
         ? 'bg-indigo-600 dark:bg-indigo-500 text-white shadow-lg shadow-indigo-200 dark:shadow-none' 
         : 'text-gray-600 dark:text-gray-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400'
-    }`}
+    } ${collapsed ? 'justify-center' : ''}`}
   >
     <Icon className="w-5 h-5 flex-shrink-0" />
-    <span className="font-medium text-sm truncate">{label}</span>
+    {!collapsed && <span className="font-medium text-sm truncate">{label}</span>}
   </Link>
 );
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [userRole, setUserRole] = useState<string>('');
@@ -106,19 +109,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { to: '/dashboard/pedagog/master-apprentice', icon: Users, label: t('masterApprentice') },
     { to: '/dashboard/pedagog/annual', icon: Award, label: t('annualWork') },
     { to: '/dashboard/pedagog/norms', icon: Scale, label: t('norms') },
-    { to: '/dashboard/pedagog/chat', icon: MessageCircle, label: 'Chat' },
+    { to: '/dashboard/pedagog/chat', icon: MessageCircle, label: 'CHAT' },
+    { to: '/dashboard/pedagog/history', icon: AlertCircle, label: "O'ZGARISHLAR TARIXI" },
   ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 flex">
       {/* Sidebar - Desktop */}
-      <aside className="hidden lg:flex flex-col w-72 bg-white dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700 p-6 fixed h-full overflow-y-auto z-50 transition-colors duration-200">
-        <Link to="/dashboard/pedagog" className="flex items-center gap-2 mb-10 px-2">
-          <div className="p-2 bg-indigo-600 rounded-lg">
-            <BookOpen className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-xl font-bold text-gray-900 dark:text-white">E-Pedagog</span>
-        </Link>
+      <aside className={`hidden lg:flex flex-col bg-white dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700 p-6 fixed h-full overflow-y-auto z-50 transition-all duration-300 ${isDesktopSidebarCollapsed ? 'w-24' : 'w-72'}`}>
+        <div className="flex justify-between items-center mb-10">
+          {!isDesktopSidebarCollapsed && (
+            <Link to="/dashboard/pedagog" className="flex items-center gap-2 overflow-hidden px-2">
+              <div className="p-2 bg-indigo-600 rounded-lg shrink-0">
+                <BookOpen className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-xl font-bold text-gray-900 dark:text-white truncate">E-Pedagog</span>
+            </Link>
+          )}
+          {isDesktopSidebarCollapsed && (
+            <Link to="/dashboard/pedagog" className="flex justify-center w-full">
+              <div className="p-2 bg-indigo-600 rounded-lg shrink-0">
+                <BookOpen className="w-6 h-6 text-white" />
+              </div>
+            </Link>
+          )}
+        </div>
 
         <nav className="flex-1 space-y-1">
           {menuItems.map((item) => (
@@ -128,6 +143,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               icon={item.icon}
               label={item.label}
               active={location.pathname === item.to}
+              collapsed={isDesktopSidebarCollapsed}
             />
           ))}
         </nav>
@@ -135,10 +151,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="pt-6 mt-6 border-t border-gray-100 dark:border-gray-700">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 rounded-xl transition-all duration-200"
+            title={isDesktopSidebarCollapsed ? t('logout') : undefined}
+            className={`flex items-center gap-3 w-full px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 rounded-xl transition-all duration-200 ${isDesktopSidebarCollapsed ? 'justify-center' : ''}`}
           >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium">{t('logout')}</span>
+            <LogOut className="w-5 h-5 flex-shrink-0" />
+            {!isDesktopSidebarCollapsed && <span className="font-medium">{t('logout')}</span>}
           </button>
         </div>
       </aside>
@@ -205,12 +222,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </AnimatePresence>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col lg:pl-72 min-w-0 relative">
+      <div className={`flex-1 flex flex-col transition-all duration-300 min-w-0 relative ${isDesktopSidebarCollapsed ? 'lg:pl-24' : 'lg:pl-72'}`}>
         {/* Header */}
         <header className="h-16 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-4 lg:px-8 flex items-center justify-between sticky top-0 z-30 transition-colors duration-300">
           <button 
             onClick={() => setIsSidebarOpen(true)}
-            className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg lg:hidden"
+            className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg lg:hidden bg-transparent"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+          
+          <button
+            onClick={() => setIsDesktopSidebarCollapsed(!isDesktopSidebarCollapsed)}
+            className="hidden lg:flex p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors items-center justify-center bg-transparent"
+            title="Yon panelni qisqartirish/kengaytirish"
           >
             <Menu className="w-6 h-6" />
           </button>

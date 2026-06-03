@@ -13,6 +13,7 @@ import AcademicWork from './pages/AcademicWork';
 import MethodicalWork from './pages/MethodicalWork';
 import ScientificWork from './pages/ScientificWork';
 import MentorWork from './pages/MentorWork';
+import GlobalHistory from './pages/GlobalHistory';
 import AdminDashboardPage from './pages/AdminDashboard';
 import YearlyWork from './pages/YearlyWork';
 import Norms from './pages/Norms';
@@ -70,6 +71,7 @@ export default function App() {
             <Route path="/dashboard/pedagog/annual" element={<DashboardLayout><YearlyWork /></DashboardLayout>} />
             <Route path="/dashboard/pedagog/norms" element={<DashboardLayout><Norms /></DashboardLayout>} />
             <Route path="/dashboard/pedagog/chat" element={<DashboardLayout><UserChat /></DashboardLayout>} />
+            <Route path="/dashboard/pedagog/history" element={<DashboardLayout><GlobalHistory /></DashboardLayout>} />
             
             <Route path="/dashboard/rahbariyat" element={<><Navbar /><RahbariyatDashboard /></>} />
             <Route path="/dashboard/tahrirlovchi" element={<><Navbar /><TahrirlovchiDashboard /></>} />
