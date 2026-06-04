@@ -2,12 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { supabase } from '../lib/supabase';
-import { BookOpen, Mail, Lock, User, Shield, Loader2, AlertCircle, ShieldCheck } from 'lucide-react';
+import { BookOpen, Mail, Lock, User, Shield, Loader2, AlertCircle, ShieldCheck, Eye, EyeOff, CheckCircle2, XCircle } from 'lucide-react';
+import Captcha from '../components/Captcha';
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [expectedCaptcha, setExpectedCaptcha] = useState('');
+  const [captchaInput, setCaptchaInput] = useState('');
   const [role, setRole] = useState('pedagog');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,10 +51,40 @@ export default function RegisterPage() {
     checkSession();
   }, [navigate]);
 
+  const checkPasswordStrength = (pass: string) => {
+    return {
+      hasUpper: /[A-Z]/.test(pass),
+      hasLower: /[a-z]/.test(pass),
+      hasNumber: /[0-9]/.test(pass),
+      hasLength: pass.length >= 8
+    };
+  };
+
+  const strength = checkPasswordStrength(password);
+  const isPasswordStrong = strength.hasUpper && strength.hasLower && strength.hasNumber && strength.hasLength;
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    if (password !== confirmPassword) {
+      setError("Parollar bir-biriga mos kelmadi!");
+      setLoading(false);
+      return;
+    }
+
+    if (!isPasswordStrong) {
+      setError("Parol yetarlicha xavfsiz emas. Kamida 8 ta belgi, 1 ta katta harf, 1 ta kichik harf va 1 ta raqam qatnashishi kerak.");
+      setLoading(false);
+      return;
+    }
+
+    if (captchaInput.toLowerCase() !== expectedCaptcha.toLowerCase()) {
+       setError("Kapcha xato kiritildi.");
+       setLoading(false);
+       return;
+    }
 
     try {
       const { data, error: authError } = await supabase.auth.signUp({
@@ -241,14 +277,95 @@ export default function RegisterPage() {
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-10 px-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="appearance-none block w-full pl-10 pr-10 px-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-indigo-600 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+
+              {password && (
+                <div className="mt-3 space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                  <p className="text-xs font-semibold text-gray-600 mb-2">Parol xavfsizligi talablari:</p>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className={`flex items-center gap-1.5 ${strength.hasLength ? 'text-emerald-600' : 'text-gray-500'}`}>
+                      {strength.hasLength ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                      Kamida 8 belgi
+                    </div>
+                    <div className={`flex items-center gap-1.5 ${strength.hasUpper ? 'text-emerald-600' : 'text-gray-500'}`}>
+                      {strength.hasUpper ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                      Katta harf (A-Z)
+                    </div>
+                    <div className={`flex items-center gap-1.5 ${strength.hasLower ? 'text-emerald-600' : 'text-gray-500'}`}>
+                      {strength.hasLower ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                      Kichik harf (a-z)
+                    </div>
+                    <div className={`flex items-center gap-1.5 ${strength.hasNumber ? 'text-emerald-600' : 'text-gray-500'}`}>
+                      {strength.hasNumber ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                      Raqam (0-9)
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                Parolni tasdiqlang
+              </label>
+              <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="appearance-none block w-full pl-10 pr-10 px-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-indigo-600 focus:outline-none"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="captcha" className="block text-sm font-medium text-gray-700 mb-1">
+                Kapchani kiriting
+              </label>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Captcha onCaptchaChange={setExpectedCaptcha} />
+                <div className="flex-1">
+                  <input
+                    id="captcha"
+                    name="captcha"
+                    type="text"
+                    required
+                    value={captchaInput}
+                    onChange={(e) => setCaptchaInput(e.target.value)}
+                    className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm font-mono text-center tracking-widest text-lg h-[50px] uppercase"
+                    placeholder="KODNI KIRITING"
+                  />
+                </div>
               </div>
             </div>
 

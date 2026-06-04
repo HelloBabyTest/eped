@@ -93,7 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const performLogout = async () => {
     await supabase.auth.signOut();
-    navigate('/login');
+    navigate('/');
   };
 
   const handleLogout = () => {
