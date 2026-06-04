@@ -14,6 +14,7 @@ type Message = {
   text: string;
   sender: string;
   time: string;
+  status: 'sent' | 'read';
 };
 
 export default function AdminChatInterface() {
@@ -37,53 +38,59 @@ export default function AdminChatInterface() {
       setMessages([]);
       return;
     }
-    const key = 'admin_chat_' + selectedUserId;
-    
-    // Initial load
-    const saved = localStorage.getItem(key);
-    if (saved) {
-      try {
-        setMessages(JSON.parse(saved));
-      } catch(e) {}
-    } else {
-      setMessages([]);
-    }
 
-    // Polling for new messages (simulate real-time for localStorage)
-    const interval = setInterval(() => {
-      const current = localStorage.getItem(key);
-      if (current) {
-        try {
-          const parsed = JSON.parse(current);
-          if (parsed.length !== messages.length) {
-            setMessages(parsed);
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch(`/api/chat/messages/${selectedUserId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (JSON.stringify(data) !== JSON.stringify(messages)) {
+            setMessages(data);
           }
-        } catch(e) {}
-      }
-    }, 1000);
+        }
+
+        // Mark as read
+        await fetch(`/api/chat/messages/${selectedUserId}/read`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ readerRole: 'admin' })
+        });
+      } catch (e) {}
+    };
+
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 1500);
 
     return () => clearInterval(interval);
-  }, [selectedUserId, messages.length]);
+  }, [selectedUserId, messages]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!newMessage.trim() || !selectedUserId) return;
     
-    const key = 'admin_chat_' + selectedUserId;
     const msg = {
        id: Math.random().toString(),
        text: newMessage.trim(),
        sender: 'admin',
-       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+       status: 'sent'
     };
     
-    const updated = [...messages, msg];
-    setMessages(updated);
-    localStorage.setItem(key, JSON.stringify(updated));
+    setMessages(prev => [...prev, msg as any]);
     setNewMessage('');
+
+    try {
+      await fetch(`/api/chat/messages/${selectedUserId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+      });
+    } catch(e) {
+      console.error(e);
+    }
   };
 
   const filteredUsers = users.filter(u => 
@@ -112,17 +119,10 @@ export default function AdminChatInterface() {
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {filteredUsers.map(user => {
             const isSelected = selectedUserId === user.id;
-            const chatKey = 'admin_chat_' + user.id;
-            const chatDataStr = localStorage.getItem(chatKey);
             let msgCount = 0;
+            // Removed localStorage check, you would need to poll or fetch per-user, 
+            // but for simplicity we keep it without lastMsg or fetch via API if needed.
             let lastMsg = '';
-            if (chatDataStr) {
-              try {
-                const msgs = JSON.parse(chatDataStr);
-                msgCount = msgs.length;
-                if (msgCount > 0) lastMsg = msgs[msgCount-1].text;
-              } catch(e) {}
-            }
 
             return (
               <button
@@ -191,7 +191,12 @@ export default function AdminChatInterface() {
                         <p className="text-sm leading-relaxed">{msg.text}</p>
                         <div className={`text-[10px] mt-1 flex justify-end items-center gap-1 ${isAdmin ? 'text-indigo-200' : 'text-gray-400'}`}>
                           {msg.time}
-                          {isAdmin && <CheckCircle2 className="w-3 h-3" />}
+                          {isAdmin && (
+                            <span className="flex items-center">
+                               <CheckCircle2 className={`w-3 h-3 ${msg.status === 'read' ? 'text-sky-300' : 'text-indigo-200'}`} />
+                               {msg.status === 'read' && <CheckCircle2 className="w-3 h-3 -ml-2 text-sky-300" />}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </motion.div>

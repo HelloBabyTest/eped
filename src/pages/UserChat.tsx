@@ -8,6 +8,7 @@ type Message = {
   text: string;
   sender: string;
   time: string;
+  status: 'sent' | 'read';
 };
 
 export default function UserChat({ isPopup = false, onClose }: { isPopup?: boolean; onClose?: () => void }) {
@@ -28,67 +29,59 @@ export default function UserChat({ isPopup = false, onClose }: { isPopup?: boole
 
   useEffect(() => {
     if (!userId) return;
-    const key = 'admin_chat_' + userId;
-    
-    // Initial load
-    const saved = localStorage.getItem(key);
-    if (saved) {
-      try {
-        setMessages(JSON.parse(saved));
-      } catch(e) {}
-    }
 
-    // Polling for new messages
-    const interval = setInterval(() => {
-      const current = localStorage.getItem(key);
-      if (current) {
-        try {
-          const parsed = JSON.parse(current);
-          if (parsed.length !== messages.length) {
-            setMessages(parsed);
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch(`/api/chat/messages/${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (JSON.stringify(data) !== JSON.stringify(messages)) {
+            setMessages(data);
           }
-        } catch(e) {}
-      }
-    }, 1000);
+        }
+        
+        // Mark as read
+        await fetch(`/api/chat/messages/${userId}/read`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ readerRole: 'user' })
+        });
+      } catch (e) {}
+    };
+
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 1500);
 
     return () => clearInterval(interval);
-  }, [userId, messages.length]);
+  }, [userId, messages]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!newMessage.trim() || !userId) return;
     
-    const key = 'admin_chat_' + userId;
     const msg = {
        id: Math.random().toString(),
        text: newMessage.trim(),
        sender: 'user', // non-admin sender
-       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+       status: 'sent'
     };
     
-    const updated = [...messages, msg];
-    setMessages(updated);
-    localStorage.setItem(key, JSON.stringify(updated));
+    setMessages(prev => [...prev, msg as any]); // Optimistic update
     setNewMessage('');
     
-    setTimeout(() => {
-        // Mock reply if no admin opens and replies (just for demo behavior if it existed, but here we don't mock? Actually we had mock in ChatWithAdmin!)
-        const currentMsgs = JSON.parse(localStorage.getItem(key) || '[]');
-        if (currentMsgs.length === updated.length) {
-            const reply = {
-              id: Math.random().toString(),
-              text: "Assalomu alaykum! Murojaatingiz qabul qilindi. Tez orada javob beramiz.",
-              sender: 'admin',
-              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-           };
-           const updatedWithReply = [...currentMsgs, reply];
-           setMessages(updatedWithReply);
-           localStorage.setItem(key, JSON.stringify(updatedWithReply));
-        }
-    }, 1500);
+    try {
+      await fetch(`/api/chat/messages/${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+      });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   if (!userId) {
@@ -171,8 +164,9 @@ export default function UserChat({ isPopup = false, onClose }: { isPopup?: boole
                         {msg.time}
                       </span>
                       {isMe && (
-                        <span className="text-green-600 dark:text-sky-300">
-                          <CheckCircle2 className="w-3 h-3 fill-current stroke-white dark:stroke-indigo-900" />
+                        <span className="text-green-600 dark:text-sky-300 flex items-center">
+                          <CheckCircle2 className={`w-3 h-3 fill-current ${msg.status === 'read' ? 'stroke-sky-400 dark:stroke-sky-300' : 'stroke-white dark:stroke-indigo-900'}`} />
+                          {msg.status === 'read' && <CheckCircle2 className="w-3 h-3 -ml-2 fill-current stroke-sky-400 dark:stroke-sky-300" />}
                         </span>
                       )}
                     </div>

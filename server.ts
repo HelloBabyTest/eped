@@ -40,6 +40,61 @@ async function startServer() {
   };
 
   // API Routes
+  
+  // In-memory chat storage
+  const chatStore: Record<string, any[]> = {};
+
+  app.get("/api/chat/messages/:userId", (req, res) => {
+    res.json(chatStore[req.params.userId] || []);
+  });
+
+  app.post("/api/chat/messages/:userId", (req, res) => {
+    const userId = req.params.userId;
+    const { message } = req.body;
+    if (!chatStore[userId]) {
+      chatStore[userId] = [];
+    }
+    chatStore[userId].push(message);
+    res.json(chatStore[userId]);
+  });
+  
+  app.post("/api/chat/messages/:userId/read", (req, res) => {
+    const userId = req.params.userId;
+    const { readerRole } = req.body; // 'admin' or 'user'
+    if (chatStore[userId]) {
+      chatStore[userId] = chatStore[userId].map((msg: any) => {
+        if (msg.sender !== readerRole && msg.status !== 'read') {
+          return { ...msg, status: 'read' };
+        }
+        return msg;
+      });
+    }
+    res.json({ success: true });
+  });
+
+  app.post("/api/chat", async (req, res) => {
+    try {
+      const { query, systemInstruction } = req.body;
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ error: "GEMINI_API_KEY is not configured on the server." });
+      }
+      const { GoogleGenAI } = await import("@google/genai");
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: query,
+        config: {
+          systemInstruction,
+          temperature: 0.3,
+        }
+      });
+      res.json({ text: response.text });
+    } catch (error: any) {
+      console.error("Gemini API error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.post("/api/admin/create-user", async (req, res) => {
     try {
       const { email, password, full_name, role } = req.body;

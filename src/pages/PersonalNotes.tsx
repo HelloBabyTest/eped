@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
-import { GoogleGenAI } from '@google/genai';
 
 interface Note {
   id: string;
@@ -66,8 +65,6 @@ export default function PersonalNotes({ adminUserId }: { adminUserId?: string })
     setIsChatLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      
       const notesContext = notes.map(n => 
         `Sarlavha: ${n.title}\nMazmuni: ${n.content}\nSana: ${new Date(n.created_at).toLocaleDateString()}`
       ).join('\n\n---\n\n');
@@ -76,22 +73,28 @@ export default function PersonalNotes({ adminUserId }: { adminUserId?: string })
         "Faqat quyida keltirilgan qaydlardagi ma'lumotlarga asoslanib javob bering. Agar javob qaydlarda bo'lmasa, uni olib qochmasdan to'g'ridan-to'g'ri 'Bu ma'lumot qaydlaringizda topilmadi' deb ayting. Doimo o'zbek tilida javob bering.\n\n" +
         "QAYDNOMALAR:\n" + (notesContext || "Hozircha qaydnomalar mavjud emas.");
 
-      // Prepare previous messages for context
       const contents = [
         ...chatMessages.map(msg => `${msg.role === 'user' ? 'Foydalanuvchi' : 'Model'}: ${msg.text}`),
         `Foydalanuvchi: ${userQuery}`
       ].join('\n\n');
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: contents,
-        config: {
-          systemInstruction,
-          temperature: 0.3,
-        }
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          query: contents,
+          systemInstruction
+        })
       });
 
-      setChatMessages(prev => [...prev, { role: 'model', text: response.text || 'Kechirasiz, javob topilmadi.' }]);
+      if (!res.ok) {
+        throw new Error('Server error');
+      }
+
+      const data = await res.json();
+      setChatMessages(prev => [...prev, { role: 'model', text: data.text || 'Kechirasiz, javob topilmadi.' }]);
     } catch (err: any) {
       console.error("AI Error:", err);
       setChatMessages(prev => [...prev, { role: 'model', text: "Kechirasiz, xatolik yuz berdi. Tugatamiz va qayta urinib ko'ring." }]);
