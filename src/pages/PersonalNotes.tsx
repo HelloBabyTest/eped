@@ -90,14 +90,24 @@ export default function PersonalNotes({ adminUserId }: { adminUserId?: string })
       });
 
       if (!res.ok) {
-        throw new Error('Server error');
+        let errMsg = 'Server error';
+        try {
+          const errData = await res.json();
+          errMsg = errData.error || errData.message || errMsg;
+        } catch(e) {}
+        throw new Error(errMsg);
       }
 
-      const data = await res.json();
-      setChatMessages(prev => [...prev, { role: 'model', text: data.text || 'Kechirasiz, javob topilmadi.' }]);
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const data = await res.json();
+        setChatMessages(prev => [...prev, { role: 'model', text: data.text || 'Kechirasiz, javob topilmadi.' }]);
+      } else {
+        throw new Error('Server returned HTML instead of JSON');
+      }
     } catch (err: any) {
       console.error("AI Error:", err);
-      setChatMessages(prev => [...prev, { role: 'model', text: "Kechirasiz, xatolik yuz berdi. Tugatamiz va qayta urinib ko'ring." }]);
+      setChatMessages(prev => [...prev, { role: 'model', text: `Xatolik: ${err.message || "Tugatamiz va qayta urinib ko'ring."}` }]);
     } finally {
       setIsChatLoading(false);
     }

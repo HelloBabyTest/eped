@@ -32,20 +32,23 @@ export default function UserChat({ isPopup = false, onClose }: { isPopup?: boole
 
     const fetchMessages = async () => {
       try {
-        const res = await fetch(`/api/chat/messages/${userId}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (JSON.stringify(data) !== JSON.stringify(messages)) {
-            setMessages(data);
-          }
-        }
-        
         // Mark as read
-        await fetch(`/api/chat/messages/${userId}/read`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ readerRole: 'user' })
-        });
+        await supabase
+          .from('admin_chats')
+          .update({ status: 'read' })
+          .eq('user_id', userId)
+          .eq('sender', 'admin')
+          .neq('status', 'read');
+
+        const { data } = await supabase
+          .from('admin_chats')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: true });
+        
+        if (data) {
+          setMessages(prev => JSON.stringify(data) !== JSON.stringify(prev) ? data as Message[] : prev);
+        }
       } catch (e) {}
     };
 
@@ -53,7 +56,7 @@ export default function UserChat({ isPopup = false, onClose }: { isPopup?: boole
     const interval = setInterval(fetchMessages, 1500);
 
     return () => clearInterval(interval);
-  }, [userId, messages]);
+  }, [userId]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -63,22 +66,19 @@ export default function UserChat({ isPopup = false, onClose }: { isPopup?: boole
     if (!newMessage.trim() || !userId) return;
     
     const msg = {
-       id: Math.random().toString(),
        text: newMessage.trim(),
        sender: 'user', // non-admin sender
+       status: 'sent',
        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-       status: 'sent'
+       user_id: userId
     };
     
-    setMessages(prev => [...prev, msg as any]); // Optimistic update
+    // optimistic UI update... (id is temp)
+    setMessages(prev => [...prev, { ...msg, id: Math.random().toString() } as any]);
     setNewMessage('');
     
     try {
-      await fetch(`/api/chat/messages/${userId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg })
-      });
+      await supabase.from('admin_chats').insert([msg]);
     } catch (e) {
       console.error(e);
     }

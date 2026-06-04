@@ -5,6 +5,8 @@ import { createServer as createViteServer } from "vite";
 import { createClient } from "@supabase/supabase-js";
 import 'dotenv/config';
 
+import { GoogleGenAI } from "@google/genai";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -72,16 +74,29 @@ async function startServer() {
     res.json({ success: true });
   });
 
+  app.get("/api/chat/status", (req, res) => {
+    res.json({ apiKeyConfigured: !!(process.env.CUSTOM_GEMINI_API_KEY || process.env.GEMINI_API_KEY) });
+  });
+
   app.post("/api/chat", async (req, res) => {
     try {
       const { query, systemInstruction } = req.body;
-      if (!process.env.GEMINI_API_KEY) {
-        return res.status(500).json({ error: "GEMINI_API_KEY is not configured on the server." });
+      const apiKey = process.env.CUSTOM_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+
+      if (!apiKey) {
+        return res.status(500).json({ error: "API kaliti topilmadi. Secrets bo'limidan CUSTOM_GEMINI_API_KEY qo'shing." });
       }
-      const { GoogleGenAI } = await import("@google/genai");
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      
+      const ai = new GoogleGenAI({
+        apiKey: apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
+        }
+      });
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.5-flash',
         contents: query,
         config: {
           systemInstruction,

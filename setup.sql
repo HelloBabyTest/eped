@@ -249,8 +249,29 @@ create policy "Users can update their own meth work." on methodical_works for up
 create policy "Users can delete their own meth work." on methodical_works for delete using (auth.uid() = user_id OR public.is_editor());
 
 -- ==========================================
--- MENTOR WORKS SETUP
+-- ADMIN CHATS SETUP
 -- ==========================================
+
+create table if not exists admin_chats (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users on delete cascade not null,
+  text text not null,
+  sender text not null, -- 'admin' or 'user'
+  status text default 'sent', -- 'sent' or 'read'
+  time text, -- storing time string or we could just use created_at, but keeping compat with app
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table admin_chats enable row level security;
+
+DROP POLICY IF EXISTS "Users can view their own chats, admins view all." on admin_chats;
+DROP POLICY IF EXISTS "Users and admins can insert chats." on admin_chats;
+DROP POLICY IF EXISTS "Users and admins can update chats." on admin_chats;
+
+create policy "Users can view their own chats, admins view all." on admin_chats for select using (auth.uid() = user_id OR public.is_admin());
+create policy "Users and admins can insert chats." on admin_chats for insert with check (auth.uid() = user_id OR public.is_admin());
+create policy "Users and admins can update chats." on admin_chats for update using (auth.uid() = user_id OR public.is_admin());
+
 
 create table if not exists mentor_works (
   id uuid default gen_random_uuid() primary key,
