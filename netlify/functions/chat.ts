@@ -1,7 +1,7 @@
 import { Handler } from '@netlify/functions';
+import { GoogleGenAI } from '@google/genai';
 
 export const handler: Handler = async (event) => {
-  // Only allow POST
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -20,50 +20,23 @@ export const handler: Handler = async (event) => {
       };
     }
 
-    // Direct HTTP request to Google Gemini API (zero-dependency, highly resilient in Netlify Functions)
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
-    const apiBody = {
-      contents: [
-        {
-          parts: [
-            {
-              text: query || ''
-            }
-          ]
+    const ai = new GoogleGenAI({
+      apiKey: apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
         }
-      ],
-      systemInstruction: systemInstruction ? {
-        parts: [
-          {
-            text: systemInstruction
-          }
-        ]
-      } : undefined,
-      generationConfig: {
-        temperature: 0.3
       }
-    };
-
-    const apiResponse = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(apiBody)
     });
 
-    if (!apiResponse.ok) {
-      const errorText = await apiResponse.text();
-      return {
-        statusCode: apiResponse.status,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: `Gemini API xatoligi: ${errorText}` })
-      };
-    }
-
-    const data = await apiResponse.json() as any;
-    const replyText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: query,
+      config: {
+        systemInstruction,
+        temperature: 0.3,
+      }
+    });
 
     return {
       statusCode: 200,
@@ -73,7 +46,7 @@ export const handler: Handler = async (event) => {
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Allow-Methods': 'POST, OPTION'
       },
-      body: JSON.stringify({ text: replyText }),
+      body: JSON.stringify({ text: response.text }),
     };
   } catch (error: any) {
     console.error('Chat error:', error);
