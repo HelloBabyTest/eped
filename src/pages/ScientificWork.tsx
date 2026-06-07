@@ -59,6 +59,7 @@ export default function ScientificWork({ adminUserId, isTasdiqlovchi }: { adminU
   const [showHistory, setShowHistory] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isLockedByApproval, setIsLockedByApproval] = useState(false);
 
   // Upload modal state
   const [uploadModal, setUploadModal] = useState<{row: number, col: number, maxCount: number} | null>(null);
@@ -136,6 +137,29 @@ export default function ScientificWork({ adminUserId, isTasdiqlovchi }: { adminU
         setHistoryLogs([]);
         setIsEditing(true);
         localStorage.setItem('cache_scientific_work_' + targetUserId, JSON.stringify({ grid: DEFAULT_TEMPLATE, allowedCells: {}, historyLogs: [] }));
+      }
+
+      // Check approvals
+      const { data: apprNote } = await supabase
+        .from('personal_notes')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .eq('title', 'APPROVALS_DATA')
+        .maybeSingle();
+
+      if (apprNote?.content) {
+        try {
+          const parsed = JSON.parse(apprNote.content);
+          if (parsed.teacherApproved || parsed.kafedraApproved || parsed.dekanApproved) {
+            setIsLockedByApproval(true);
+          } else {
+            setIsLockedByApproval(false);
+          }
+        } catch (_) {
+          setIsLockedByApproval(false);
+        }
+      } else {
+        setIsLockedByApproval(false);
       }
     } catch (err: any) {
       console.error('Error fetching scientific work:', err);
@@ -436,6 +460,12 @@ export default function ScientificWork({ adminUserId, isTasdiqlovchi }: { adminU
 
   return (
     <div className="max-w-full overflow-x-hidden">
+      {isLockedByApproval && !adminUserId && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl flex items-center gap-3 font-semibold text-sm shadow-sm print:hidden">
+          <Lock className="w-5 h-5 text-amber-600 shrink-0" />
+          <span>Ushbu ilmiy-tadqiqot ishi tasdiqlangan va yillik faoliyat hisobotingiz muhrlangan. Jadvallarni tahrirlash cheklangan.</span>
+        </div>
+      )}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <div className="flex items-center gap-3">
@@ -489,13 +519,15 @@ export default function ScientificWork({ adminUserId, isTasdiqlovchi }: { adminU
           )}
 
           {!isTasdiqlovchi && !isEditing ? (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
-            >
-              <Pencil className="w-4 h-4" />
-              Tahrirlash
-            </button>
+            !(isLockedByApproval && !adminUserId) ? (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 print:hidden"
+              >
+                <Pencil className="w-4 h-4" />
+                Tahrirlash
+              </button>
+            ) : null
           ) : !isTasdiqlovchi ? (
             <>
               {adminUserId && (

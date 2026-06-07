@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Menu, X, BookOpen, LogOut, 
   LayoutDashboard, StickyNote, User, 
-  GraduationCap, Library, FlaskConical, 
+  GraduationCap, Library, FlaskConical, FileText,
   Users, Award, Scale, Sun, Moon, Loader2,
   AlertCircle, MessageCircle
 } from 'lucide-react';
@@ -108,6 +108,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { to: '/dashboard/pedagog/scientific', icon: FlaskConical, label: t('scientificWork') },
     { to: '/dashboard/pedagog/master-apprentice', icon: Users, label: t('masterApprentice') },
     { to: '/dashboard/pedagog/annual', icon: Award, label: t('annualWork') },
+    { to: '/dashboard/pedagog/general-report', icon: FileText, label: "UMUMIY HISOBOT" },
     { to: '/dashboard/pedagog/norms', icon: Scale, label: t('norms') },
     { to: '/dashboard/pedagog/chat', icon: MessageCircle, label: 'CHAT' },
     { to: '/dashboard/pedagog/history', icon: AlertCircle, label: "O'ZGARISHLAR TARIXI" },

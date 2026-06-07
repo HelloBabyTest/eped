@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Plus, Save, Loader2, AlertCircle, 
   Trash2, Columns, Rows, CheckCircle2, X,
-  Pencil, RotateCcw, Paperclip, ExternalLink, FileText, Printer, History
+  Pencil, RotateCcw, Paperclip, ExternalLink, FileText, Printer, History, Lock
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -46,6 +46,7 @@ export default function MentorWork({ adminUserId, isTasdiqlovchi }: { adminUserI
   const [deletingCell, setDeletingCell] = useState<{row: number, col: number} | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isLockedByApproval, setIsLockedByApproval] = useState(false);
 
   const [isApproved, setIsApproved] = useState(false);
   useEffect(() => {
@@ -107,6 +108,29 @@ export default function MentorWork({ adminUserId, isTasdiqlovchi }: { adminUserI
         setHistoryLogs([]);
         setIsEditing(true);
         localStorage.setItem('cache_mentor_work_' + targetUserId, JSON.stringify({ grid: DEFAULT_TEMPLATE, historyLogs: [] }));
+      }
+
+      // Check approvals
+      const { data: apprNote } = await supabase
+        .from('personal_notes')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .eq('title', 'APPROVALS_DATA')
+        .maybeSingle();
+
+      if (apprNote?.content) {
+        try {
+          const parsed = JSON.parse(apprNote.content);
+          if (parsed.teacherApproved || parsed.kafedraApproved || parsed.dekanApproved) {
+            setIsLockedByApproval(true);
+          } else {
+            setIsLockedByApproval(false);
+          }
+        } catch (_) {
+          setIsLockedByApproval(false);
+        }
+      } else {
+        setIsLockedByApproval(false);
       }
     } catch (err: any) {
       console.error('Error fetching mentor work:', err);
@@ -337,6 +361,12 @@ export default function MentorWork({ adminUserId, isTasdiqlovchi }: { adminUserI
 
   return (
     <div className="max-w-full overflow-x-hidden">
+      {isLockedByApproval && !adminUserId && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl flex items-center gap-3 font-semibold text-sm shadow-sm print:hidden">
+          <Lock className="w-5 h-5 text-amber-600 shrink-0" />
+          <span>Ushbu ustoz-shogird ishi tasdiqlangan va yillik faoliyat hisobotingiz muhrlangan. Jadvallarni tahrirlash cheklangan.</span>
+        </div>
+      )}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <div className="flex items-center gap-3">
@@ -390,13 +420,15 @@ export default function MentorWork({ adminUserId, isTasdiqlovchi }: { adminUserI
           )}
 
           {!isTasdiqlovchi && !isEditing ? (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
-            >
-              <Pencil className="w-4 h-4" />
-              Tahrirlash
-            </button>
+            !(isLockedByApproval && !adminUserId) ? (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 print:hidden"
+              >
+                <Pencil className="w-4 h-4" />
+                Tahrirlash
+              </button>
+            ) : null
           ) : !isTasdiqlovchi ? (
             <>
               {adminUserId && (

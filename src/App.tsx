@@ -17,6 +17,7 @@ import GlobalHistory from './pages/GlobalHistory';
 import AdminDashboardPage from './pages/AdminDashboard';
 import YearlyWork from './pages/YearlyWork';
 import Norms from './pages/Norms';
+import GeneralReport from './pages/GeneralReport';
 import { isSupabaseConfigured } from './lib/supabase';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -69,9 +70,12 @@ export default function App() {
             <Route path="/dashboard/pedagog/scientific" element={<DashboardLayout><ScientificWork /></DashboardLayout>} />
             <Route path="/dashboard/pedagog/master-apprentice" element={<DashboardLayout><MentorWork /></DashboardLayout>} />
             <Route path="/dashboard/pedagog/annual" element={<DashboardLayout><YearlyWork /></DashboardLayout>} />
+            <Route path="/dashboard/pedagog/general-report" element={<DashboardLayout><GeneralReport /></DashboardLayout>} />
             <Route path="/dashboard/pedagog/norms" element={<DashboardLayout><Norms /></DashboardLayout>} />
             <Route path="/dashboard/pedagog/chat" element={<DashboardLayout><UserChat /></DashboardLayout>} />
             <Route path="/dashboard/pedagog/history" element={<DashboardLayout><GlobalHistory /></DashboardLayout>} />
+            
+            <Route path="/verify-report" element={<div className="bg-gray-50 min-h-screen p-4 sm:p-8 md:p-12"><GeneralReport /></div>} />
             
             <Route path="/dashboard/rahbariyat" element={<><Navbar /><RahbariyatDashboard /></>} />
             <Route path="/dashboard/tahrirlovchi" element={<><Navbar /><TahrirlovchiDashboard /></>} />

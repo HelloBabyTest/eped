@@ -34,32 +34,175 @@ const performanceData = [
   { name: 'Dekabr', ortalama_baho: 88, davomat: 97 },
 ];
 
-// Demo data for the Summary section based on other sections theoretically
-const yearlySummaryData = [
-  { id: 1, label: "O'quv yuklama (soatda)", plan: 850, actual: 420 },
-  { id: 2, label: "O'quv-uslubiy ishlar", plan: 150, actual: 120 },
-  { id: 3, label: "Ilmiy-tadqiqot ishlari", plan: 200, actual: 150 },
-  { id: 4, label: "Ustoz-shogird ishlari", plan: 100, actual: 80 },
-];
+const getUzbekDate = (date: Date) => {
+  const months = [
+    'yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 
+    'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'
+  ];
+  const weekdays = [
+    'Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'
+  ];
+  const day = date.getDate();
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  const weekday = weekdays[date.getDay()];
+  return `${weekday}, ${year}-yil ${day}-${month}`;
+};
 
 export default function PedagogDashboard() {
   const [departmentConclusion, setDepartmentConclusion] = useState("Kafedrada yil davomida bajarilgan ishlar qoniqarli deb topildi.");
   const [facultyDecision, setFacultyDecision] = useState("O'qituvchining yillik ishlari tasdiqlandi.");
   const [assignedGroups, setAssignedGroups] = useState<{id: string, name: string}[]>([]);
+  const [totalStudents, setTotalStudents] = useState(124);
+  const [completedPercent, setCompletedPercent] = useState(0);
+  const [notesCount, setNotesCount] = useState(0);
+  const [pendingReports, setPendingReports] = useState(0);
+  const [yearlySummary, setYearlySummary] = useState([
+    { id: 1, label: "O'quv yuklama (soatda)", plan: 850, actual: 0 },
+    { id: 2, label: "O'quv-uslubiy ishlar", plan: 150, actual: 0 },
+    { id: 3, label: "Ilmiy-tadqiqot ishlari", plan: 200, actual: 0 },
+    { id: 4, label: "Ustoz-shogird ishlari", plan: 100, actual: 0 },
+  ]);
 
   useEffect(() => {
-    const fetchUserAndGroups = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
+    const fetchRealData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Load comments/decisions from localStorage that matches YearlyWork
+        const cachedKafedra = localStorage.getItem('kafedra_xulosa_' + user.id);
+        if (cachedKafedra) setDepartmentConclusion(cachedKafedra);
+        const cachedFakultet = localStorage.getItem('fakultet_qarori_' + user.id);
+        if (cachedFakultet) setFacultyDecision(cachedFakultet);
+
+        // Biriktirilgan guruhlar
         const groupsJson = localStorage.getItem('teacher_groups_' + user.id);
         if (groupsJson) {
           try {
             setAssignedGroups(JSON.parse(groupsJson));
           } catch (e) {}
         }
+
+        // Count profiles as real count
+        const { count: profileCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true });
+        if (profileCount) {
+          setTotalStudents(profileCount);
+        }
+
+        // Count user personal notes
+        const { count: personalNotesCount } = await supabase
+          .from('personal_notes')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+        if (personalNotesCount !== null) {
+          setNotesCount(personalNotesCount);
+        }
+
+        const getCellText = (cell: any): string => {
+          if (typeof cell === 'string') return cell;
+          if (cell && typeof cell === 'object') {
+            if (typeof cell.text === 'string') return cell.text;
+          }
+          return '';
+        };
+
+        // Academic Work
+        const { data: ac } = await supabase.from('academic_works').select('table_data').eq('user_id', user.id).maybeSingle();
+        let acCount = 0;
+        if (ac?.table_data) {
+          let rows: any[] = [];
+          if (Array.isArray(ac.table_data)) {
+            rows = ac.table_data;
+          } else if (ac?.table_data && typeof ac.table_data === 'object') {
+            const kuzgi = Array.isArray((ac.table_data as any).kuzgi) ? (ac.table_data as any).kuzgi : [];
+            const bahorgi = Array.isArray((ac.table_data as any).bahorgi) ? (ac.table_data as any).bahorgi : [];
+            rows = [...kuzgi, ...bahorgi];
+          }
+          acCount = rows.filter(r => Array.isArray(r) && typeof r[1] === 'string' && r[1].trim() !== '').length;
+        }
+
+        // Methodical Work
+        const { data: me } = await supabase.from('methodical_works').select('table_data').eq('user_id', user.id).maybeSingle();
+        let meCount = 0;
+        if (me?.table_data) {
+          let rows: any[] = [];
+          if (Array.isArray(me.table_data)) {
+            rows = me.table_data;
+          } else if (me?.table_data && typeof me.table_data === 'object' && Array.isArray((me.table_data as any).grid)) {
+            rows = (me.table_data as any).grid;
+          }
+          meCount = rows.filter(r => {
+            if (!Array.isArray(r)) return false;
+            const col0 = getCellText(r[0]).trim();
+            const col1 = getCellText(r[1]).trim();
+            if (col0 === '№' || (col0 === '1' && col1 === '2')) return false;
+            return col1 !== '';
+          }).length;
+        }
+
+        // Scientific Work
+        const { data: sc } = await supabase.from('scientific_works').select('table_data').eq('user_id', user.id).maybeSingle();
+        let scCount = 0;
+        if (sc?.table_data) {
+          let rows: any[] = [];
+          if (Array.isArray(sc.table_data)) {
+            rows = sc.table_data;
+          } else if (sc?.table_data && typeof sc.table_data === 'object' && Array.isArray((sc.table_data as any).grid)) {
+            rows = (sc.table_data as any).grid;
+          }
+          scCount = rows.filter(r => {
+            if (!Array.isArray(r)) return false;
+            const col0 = getCellText(r[0]).trim();
+            const col1 = getCellText(r[1]).trim();
+            if (col0 === '№' || (col0 === '1' && col1 === '2')) return false;
+            return col1 !== '';
+          }).length;
+        }
+
+        // Mentor Work
+        const { data: mn } = await supabase.from('mentor_works').select('table_data').eq('user_id', user.id).maybeSingle();
+        let mnCount = 0;
+        if (mn?.table_data) {
+          let rows: any[] = [];
+          if (Array.isArray(mn.table_data)) {
+            rows = mn.table_data;
+          } else if (mn?.table_data && typeof mn.table_data === 'object' && Array.isArray((mn.table_data as any).grid)) {
+            rows = (mn.table_data as any).grid;
+          }
+          mnCount = rows.filter(r => {
+            if (!Array.isArray(r)) return false;
+            const col0 = getCellText(r[0]).trim();
+            const col1 = getCellText(r[1]).trim();
+            if (col0 === '№' || (col0 === '1' && col1 === '2')) return false;
+            return col1 !== '';
+          }).length;
+        }
+
+        const realSummary = [
+          { id: 1, label: "O'quv yuklama (soatda)", plan: 850, actual: acCount > 0 ? acCount * 30 : 0 },
+          { id: 2, label: "O'quv-uslubiy ishlar", plan: 150, actual: meCount * 10 },
+          { id: 3, label: "Ilmiy-tadqiqot ishlari", plan: 200, actual: scCount * 15 },
+          { id: 4, label: "Ustoz-shogird ishlari", plan: 100, actual: mnCount * 10 },
+        ];
+        
+        setYearlySummary(realSummary);
+
+        const totalPlan = realSummary.reduce((sum, item) => sum + item.plan, 0);
+        const totalActual = realSummary.reduce((sum, item) => sum + item.actual, 0);
+        const avgPerc = totalPlan > 0 ? Math.round((totalActual / totalPlan) * 100) : 0;
+        setCompletedPercent(Math.min(100, avgPerc));
+
+        const pending = realSummary.filter(item => item.actual === 0).length;
+        setPendingReports(pending);
+
+      } catch (err) {
+        console.error("Error fetching real dashboard data:", err);
       }
     };
-    fetchUserAndGroups();
+    fetchRealData();
   }, []);
 
   const handlePrint = () => {
@@ -70,13 +213,13 @@ export default function PedagogDashboard() {
     <div className="max-w-full mx-auto space-y-8">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Professor-o'qituvchi Boshqaruv Paneli</h1>
+          <h1 className="text-3xl font-bold text-gray-900 font-sans tracking-tight">Professor-o'qituvchi Boshqaruv Paneli</h1>
           <p className="mt-2 text-gray-600">
-            Xush kelibsiz! Bugungi rejalaringiz va umumiy statistikangiz bilan tanishing (Demo rejim).
+            Xush kelibsiz! Bugungi rejalaringiz va umumiy statistikangiz bilan tanishing.
           </p>
         </div>
-        <div className="text-sm font-medium text-gray-500 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100">
-          Bugun: {new Date().toLocaleDateString('uz-UZ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        <div className="text-sm font-medium text-gray-500 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100 font-sans">
+          Bugun: {getUzbekDate(new Date())}
         </div>
       </div>
 
@@ -85,29 +228,29 @@ export default function PedagogDashboard() {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
           <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><Users className="w-6 h-6" /></div>
           <div>
-            <p className="text-sm text-gray-500 font-medium">Barcha talabalar</p>
-            <p className="text-2xl font-bold text-gray-900">124</p>
+            <p className="text-sm text-gray-500 font-medium">Faol pedagoglar</p>
+            <p className="text-2xl font-bold text-gray-900">{totalStudents}</p>
           </div>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
           <div className="p-3 bg-green-50 text-green-600 rounded-xl"><TrendingUp className="w-6 h-6" /></div>
           <div>
-            <p className="text-sm text-gray-500 font-medium">O'rtacha o'zlashtirish</p>
-            <p className="text-2xl font-bold text-gray-900">84.5%</p>
+            <p className="text-sm text-gray-500 font-medium">Bajarilish ko'rsatkichi</p>
+            <p className="text-2xl font-bold text-gray-900">{completedPercent}%</p>
           </div>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
           <div className="p-3 bg-yellow-50 text-yellow-600 rounded-xl"><Calendar className="w-6 h-6" /></div>
           <div>
-            <p className="text-sm text-gray-500 font-medium">Bugungi darslar</p>
-            <p className="text-2xl font-bold text-gray-900">4 ta</p>
+            <p className="text-sm text-gray-500 font-medium">Shaxsiy qaydlar</p>
+            <p className="text-2xl font-bold text-gray-900">{notesCount} ta</p>
           </div>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
           <div className="p-3 bg-purple-50 text-purple-600 rounded-xl"><FileText className="w-6 h-6" /></div>
           <div>
-            <p className="text-sm text-gray-500 font-medium">Kutilayotgan hisobotlar</p>
-            <p className="text-2xl font-bold text-gray-900">2 ta</p>
+            <p className="text-sm text-gray-500 font-medium">Bajarilmagan bo'limlar</p>
+            <p className="text-2xl font-bold text-gray-900">{pendingReports} ta</p>
           </div>
         </div>
       </div>
@@ -148,7 +291,7 @@ export default function PedagogDashboard() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 relative z-10">
-          {yearlySummaryData.map((item, index) => {
+          {yearlySummary.map((item, index) => {
             const diffPerc = item.plan > 0 ? Math.round(((item.actual - item.plan) / item.plan) * 100) : 0;
             const percent = Math.min(100, Math.round((item.actual / item.plan) * 100));
             
